@@ -198,19 +198,19 @@ export default function FAQPage() {
             </section>
 
             <section id="seguranca" className="space-y-4">
-              <SectionTitle title="Segurança" subtitle="Aqui é troca. Dinheiro real é treta." />
+              <SectionTitle title="Segurança"/>
               <div className="space-y-3">
                 <FAQItem q="É permitido RMT (dinheiro real, pix, venda)?">
-                  Não. ARC Traders é pra troca dentro do jogo. Se alguém pedir dinheiro real, é um baita red flag.
+                 Sim, porem não nos responsabilizamos por perdas ou golpes.
                 </FAQItem>
 
                 <FAQItem q="Como evitar golpe?">
-                  Coisas clássicas: pedido de Pix, “reserva”, link estranho, pressa demais, ou papo de “manda item
+                  Coisas clássicas: link estranho, pressa demais, ou papo de “manda item
                   primeiro”. Se tá cheirando golpe, provavelmente é. Sai fora.
                 </FAQItem>
 
                 <FAQItem q="Dá pra denunciar alguém?">
-                  MVP ainda é simples. Por enquanto, o caminho é: não fechar com a pessoa e, se for golpe, mandar o
+                  é simples. Por enquanto, o caminho é: não fechar com a pessoa e, se for golpe, mandar o
                   link do anúncio pra gente implementar um sistema de report depois.
                 </FAQItem>
               </div>
@@ -282,7 +282,7 @@ export default function FAQPage() {
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-xs text-white/55 backdrop-blur">
-              Fan-made, sem afiliação oficial. Sem RMT. Se pedir dinheiro real, é block e vida que segue. 🤝
+              Fan-made, sem afiliação oficial.🤝
             </div>
           </aside>
         </div>
