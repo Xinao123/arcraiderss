@@ -268,7 +268,7 @@ export default async function HomePage() {
                 ) : (
                   <>
                     <Pill>sem tags ainda</Pill>
-                    <Pill>posta e inaugura 😈</Pill>
+                    <Pill>posta e inaugura</Pill>
                   </>
                 )}
               </div>

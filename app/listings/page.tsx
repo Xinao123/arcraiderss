@@ -352,7 +352,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
         {!dbError && listings.length === 0 && (
           <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-8 text-white/70">
-            Nada apareceu com esses filtros. Limpa tag/região ou tenta outra busca 😈
+            Nada apareceu com esses filtros. Limpa tag/região ou tenta outra busca
           </div>
         )}
 
