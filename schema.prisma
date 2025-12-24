@@ -36,19 +36,20 @@ model User {
 
   listings        Listing[]
 
-  sentMessages    Message[]       @relation("sentMessages")
-  conversationsA  Conversation[]  @relation("convStarter")
-  conversationsB  Conversation[]  @relation("convOwner")
+  // Chat
+  sentMessages    Message[]      @relation("sentMessages")
+  conversationsA  Conversation[] @relation("convStarter")
+  conversationsB  Conversation[] @relation("convOwner")
 
-  tradesProposed  Trade[] @relation("tradeProposer")
-  tradesAccepted  Trade[] @relation("tradeAccepter")
-
+  // Trades + Reviews
+  tradesProposed  Trade[]  @relation("tradeProposer")
+  tradesAccepted  Trade[]  @relation("tradeAccepter")
   reviewsGiven    Review[] @relation("reviewer")
   reviewsReceived Review[] @relation("reviewee")
 
+  // Safety
   blocksMade      Block[]  @relation("blocker")
   blocksReceived  Block[]  @relation("blocked")
-
   reportsMade     Report[] @relation("reporter")
   reportsReceived Report[] @relation("reportedUser")
 
@@ -77,6 +78,7 @@ model Listing {
   tags             ListingTag[]
   trades           Trade[]
   conversations    Conversation[]
+  reports          Report[]      // ✅ lado oposto do Report.listing
 
   @@index([status, createdAt])
   @@index([userId])
@@ -186,8 +188,12 @@ model Report {
 
   reason       String
   details      String? @db.Text
-}
 
+  @@index([createdAt])
+  @@index([reporterId])
+  @@index([listingId])
+  @@index([targetUserId])
+}
 
 model Block {
   blockerId String
