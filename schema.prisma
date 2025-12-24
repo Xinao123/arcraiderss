@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum TradeStatus {
+  PROPOSED
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  displayName     String?
+  avatarUrl       String?
+  bio             String?
+
+  steamProfileUrl String?
+  arcProfileUrl   String?
+  discordHandle   String?
+
+  listings        Listing[]
+
+  sentMessages    Message[]       @relation("sentMessages")
+  conversationsA  Conversation[]  @relation("convStarter")
+  conversationsB  Conversation[]  @relation("convOwner")
+
+  tradesProposed  Trade[] @relation("tradeProposer")
+  tradesAccepted  Trade[] @relation("tradeAccepter")
+
+  reviewsGiven    Review[] @relation("reviewer")
+  reviewsReceived Review[] @relation("reviewee")
+
+  blocksMade      Block[]  @relation("blocker")
+  blocksReceived  Block[]  @relation("blocked")
+
+  reportsMade     Report[] @relation("reporter")
+
+  @@index([createdAt])
+}
+
+model Listing {
+  id               String        @id @default(cuid())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  status           ListingStatus @default(ACTIVE)
+
+  imageUrl         String
+  imageHash        String?
+
+  offerText        String        @db.Text
+  wantText         String        @db.Text
+
+  region           String?
+  availabilityNote String?
+
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tags             ListingTag[]
+  trades           Trade[]
+  conversations    Conversation[]
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+
+  listings ListingTag[]
+}
+
+model ListingTag {
+  listingId String
+  tagId     String
+
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([listingId, tagId])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  starterId String
+  ownerId   String
+  starter   User @relation("convStarter", fields: [starterId], references: [id], onDelete: Cascade)
+  owner     User @relation("convOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  messages  Message[]
+
+  @@unique([listingId, starterId])
+  @@index([ownerId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId       String
+  sender         User @relation("sentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  body           String @db.Text
+
+  @@index([conversationId, createdAt])
+}
+
+model Trade {
+  id          String      @id @default(cuid())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  status      TradeStatus @default(PROPOSED)
+  completedAt DateTime?
+
+  listingId   String
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  proposerId  String
+  accepterId  String?
+
+  proposer    User  @relation("tradeProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  accepter    User? @relation("tradeAccepter", fields: [accepterId], references: [id], onDelete: SetNull)
+
+  review      Review?
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  tradeId    String   @unique
+  trade      Trade    @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
+  reviewerId String
+  revieweeId String
+  reviewer   User @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee   User @relation("reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  rating     Int
+  comment    String? @db.Text
+
+  @@index([revieweeId, createdAt])
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+
+  reporterId   String
+  reporter     User @relation("reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  listingId    String?
+  listing      Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  targetUserId String?
+  targetUser   User? @relation(fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  reason       String
+  details      String? @db.Text
+}
+
+model Block {
+  blockerId String
+  blockedId String
+
+  blocker   User @relation("blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User @relation("blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+}
