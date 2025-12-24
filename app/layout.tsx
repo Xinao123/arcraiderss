@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ARC Swap",
+  title: "ARC TRADERS",
   description: "Troca de itens do ARC Raiders",
 };
 

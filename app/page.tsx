@@ -84,7 +84,7 @@ function ListingCard({
           sizes="(max-width: 768px) 100vw, 33vw"
         />
         <div className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
-          print real
+          anúncio com print
         </div>
       </div>
 
@@ -129,26 +129,29 @@ function ListingCard({
 export default async function HomePage() {
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const [totalListings, listingsLast24h, totalUsers, latestListings, topTagCounts] =
-    await Promise.all([
-      prisma.listing.count(),
-      prisma.listing.count({ where: { createdAt: { gte: since24h } } }),
-      prisma.user.count(),
-      prisma.listing.findMany({
-        take: 6,
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: true,
-          tags: { include: { tag: true } },
-        },
-      }),
-      prisma.listingTag.groupBy({
-        by: ["tagId"],
-        _count: { tagId: true },
-        orderBy: { _count: { tagId: "desc" } },
-        take: 10,
-      }),
-    ]);
+  const [
+    totalListings,
+    activeListings,
+    listingsLast24h,
+    latestListings,
+    topTagCounts,
+  ] = await Promise.all([
+    prisma.listing.count(),
+    prisma.listing.count({ where: { status: "ACTIVE" } }),
+    prisma.listing.count({ where: { status: "ACTIVE", createdAt: { gte: since24h } } }),
+    prisma.listing.findMany({
+      where: { status: "ACTIVE" },
+      take: 6,
+      orderBy: { createdAt: "desc" },
+      include: { user: true, tags: { include: { tag: true } } },
+    }),
+    prisma.listingTag.groupBy({
+      by: ["tagId"],
+      _count: { tagId: true },
+      orderBy: { _count: { tagId: "desc" } },
+      take: 10,
+    }),
+  ]);
 
   const tags = topTagCounts.length
     ? await prisma.tag.findMany({
@@ -206,15 +209,15 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <Badge>⚡ print + texto + contato · rápido e direto</Badge>
+            <Badge>⚡ print + “ofereço / quero” + Steam/Discord · pronto</Badge>
 
             <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
-              Seu loot tá parado. Bora transformar em upgrade.
+              Posta seu item. A galera vê. Você troca.
             </h1>
 
             <p className="mt-4 text-base leading-relaxed text-white/70">
-              Aqui a troca é simples: você posta o print do item, diz o que quer em troca e deixa Steam ou Discord.
-              A galera acha pelo feed e pelas tags, chama e fecha. Sem novela.
+              ARC Traders é um feed de trocas direto ao ponto: print do item, o que você quer em troca e um contato.
+              Sem conta, sem cadastro chato. Só anúncio que funciona.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -222,36 +225,36 @@ export default async function HomePage() {
                 href="/new"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90"
               >
-                Quero postar agora
+                Postar agora
               </Link>
               <Link
                 href="/listings"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
               >
-                Ver o feed ao vivo
+                Abrir o feed
               </Link>
             </div>
 
-            {/* Real stats */}
+            {/* Real stats (sem users) */}
             <div className="mt-7 grid grid-cols-3 gap-3">
-              <Stat label="Anúncios no total" value={String(totalListings)} hint="Tudo postado pela galera" />
-              <Stat label="Novos nas 24h" value={String(listingsLast24h)} hint="Movimento recente no feed" />
-              <Stat label="Usuários" value={String(totalUsers)} hint="Perfis cadastrados" />
+              <Stat label="Anúncios no total" value={String(totalListings)} hint="tudo que já foi postado" />
+              <Stat label="Novos nas 24h" value={String(listingsLast24h)} hint="movimento recente" />
+              <Stat label="Ativos agora" value={String(activeListings)} hint="aparecem no feed" />
             </div>
 
-            {/* Trust / rules */}
+            {/* Safety / rules */}
             <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/70 backdrop-blur">
-              <div className="font-semibold text-white">Regras rápidas (pra não virar bagunça)</div>
+              <div className="font-semibold text-white">Regras rápidas</div>
               <ul className="mt-3 space-y-2">
-                <li>✅ Print obrigatório (recorta e dá zoom se precisar).</li>
-                <li>✅ Nada de dinheiro real (RMT). Troca é troca.</li>
-                <li>✅ Se alguém pedir Pix, link suspeito ou “reserva”, só ignora e reporta.</li>
+                <li>✅ Print obrigatório (recorta/zoom pra ficar legível).</li>
+                <li>✅ Troca é troca: nada de dinheiro real (RMT).</li>
+                <li>✅ Se pedirem Pix, “reserva” ou link suspeito: ignora e reporta.</li>
               </ul>
             </div>
 
             {/* Trending tags */}
             <div className="mt-6">
-              <div className="text-xs text-white/50">O que tá bombando agora</div>
+              <div className="text-xs text-white/50">O que tá bombando no feed</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {topTags.length ? (
                   topTags.map((t) => (
@@ -274,9 +277,9 @@ export default async function HomePage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-sm font-semibold">Feed ao vivo</div>
-                <div className="text-xs text-white/60">puxado do banco, sem mock</div>
+                <div className="text-xs text-white/60">últimas trocas publicadas pela comunidade</div>
               </div>
-              <div className="text-xs text-white/50">atividade 24h: {listingsLast24h}</div>
+              <div className="text-xs text-white/50">24h: {listingsLast24h} novos</div>
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -287,7 +290,7 @@ export default async function HomePage() {
 
             {latestListings.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                Ainda não tem anúncio. O primeiro que postar vira lenda local.
+                Ainda não tem anúncio. Posta o primeiro e vira o “founder” do rolê 😅
               </div>
             ) : null}
 
@@ -296,7 +299,7 @@ export default async function HomePage() {
                 href="/listings"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
               >
-                Abrir feed completo
+                Ver tudo no feed
               </Link>
             </div>
           </div>
@@ -307,7 +310,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
           title="Como funciona"
-          subtitle="Três passos e você já tá trocando."
+          subtitle="Três passos, zero burocracia."
           right={
             <Link
               href="/new"
@@ -321,32 +324,31 @@ export default async function HomePage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🖼️</div>
-            <div className="mt-3 text-base font-semibold">Print nítido</div>
+            <div className="mt-3 text-base font-semibold">Sobe o print</div>
             <div className="mt-2 text-sm text-white/70">
-              Sobe o print e recorta pro item ficar claro. Menos poluição, mais confiança.
+              Print mostra a real. Recorta e dá zoom pra deixar o item nítido.
             </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🏷️</div>
-            <div className="mt-3 text-base font-semibold">Texto e tags</div>
+            <div className="mt-3 text-base font-semibold">Escreve a troca</div>
             <div className="mt-2 text-sm text-white/70">
-              “Ofereço” e “Quero” bem escritos fazem o match acontecer. Tags ajudam na busca.
+              “Ofereço” e “Quero” bem descritos fazem a galera te achar rapidinho.
             </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🤝</div>
-            <div className="mt-3 text-base font-semibold">Contato direto</div>
+            <div className="mt-3 text-base font-semibold">Deixa contato</div>
             <div className="mt-2 text-sm text-white/70">
-              Deixa Steam ou Discord. A negociação rola fora do site, sem atrito.
+              Steam ou Discord e pronto. A negociação acontece direto com você.
             </div>
           </div>
         </div>
 
-        {/* Footer */}
         <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
-          Fan-made, sem afiliação oficial. Regra número 1: sem RMT. Se pedir dinheiro real, é block e vida que segue. 🤝
+          Fan-made, sem afiliação oficial. Sem RMT. Se pedir dinheiro real, é block e vida que segue. 🤝
         </footer>
       </section>
     </main>
