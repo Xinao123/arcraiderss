@@ -50,6 +50,7 @@ model User {
   blocksReceived  Block[]  @relation("blocked")
 
   reportsMade     Report[] @relation("reporter")
+  reportsReceived Report[] @relation("reportedUser")
 
   @@index([createdAt])
 }
@@ -181,11 +182,12 @@ model Report {
   listing      Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   targetUserId String?
-  targetUser   User? @relation(fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetUser   User? @relation("reportedUser", fields: [targetUserId], references: [id], onDelete: SetNull)
 
   reason       String
   details      String? @db.Text
 }
+
 
 model Block {
   blockerId String
