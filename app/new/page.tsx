@@ -210,6 +210,7 @@ export default function NewListingPage() {
     const expiresInDays = Number(formData.get("expiresInDays") ?? 3);
 
 
+
     try {
       // Usa o arquivo final (recortado). Se o user não aplicou crop, usa o original mesmo.
       const fileToUpload = finalFile ?? (rawFile as File | null);
@@ -474,7 +475,7 @@ export default function NewListingPage() {
               </div>
             </div>
 
-            <div className="mt-4">
+ <div className="mt-4">
   <label className="text-sm font-semibold">Expiração do anúncio</label>
   <select
     name="expiresInDays"
@@ -486,8 +487,10 @@ export default function NewListingPage() {
     <option value="7">7 dias</option>
   </select>
   <div className="mt-2 text-xs text-white/50">
-    Depois disso o anúncio some do feed e é removido automaticamente.
+    Quando expirar, o anúncio some do feed automaticamente.
   </div>
+</div>
+
 </div>
 
 
