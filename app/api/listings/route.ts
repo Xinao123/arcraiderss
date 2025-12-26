@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       : [];
 
       const days = Number(body.expiresIn ?? 3);
-if (![1, 3, 7].includes(days)) {
+if (![5, 1, 3, 7].includes(days)) {
   return NextResponse.json({ error: "Expiração inválida (use 1, 3 ou 7 dias)." }, { status: 400 });
 }
 const now = new Date();
