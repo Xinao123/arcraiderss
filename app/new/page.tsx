@@ -530,7 +530,7 @@ const [expiresIn, setExpiresIn] = useState<"5m" | "1d" | "3d" | "7d">("3d");
             </button>
 
             <div className="mt-4 text-xs text-white/55">
-              Fan-made, sem afiliação oficial. Se pedirem Pix, “reserva” ou link estranho: block e tchau. 🤝
+              Fan-made, sem afiliação oficial. 🤝
             </div>
           </div>
         </form>
@@ -656,10 +656,6 @@ const [expiresIn, setExpiresIn] = useState<"5m" | "1d" | "3d" | "7d">("3d");
                   >
                     Cancelar
                   </button>
-                </div>
-
-                <div className="mt-4 text-[11px] text-white/45">
-                  Obs: sem limite de pixel = se o print for 4K e o recorte grande, o arquivo pode ficar pesado.
                 </div>
               </div>
             </div>

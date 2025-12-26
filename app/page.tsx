@@ -293,7 +293,7 @@ export default async function HomePage() {
 
             {latestListings.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                Ainda não tem anúncio. Posta o primeiro e vira o “founder” do rolê 😅
+                Ainda não tem anúncios. Poste e seja o primeiro
               </div>
             ) : null}
 
