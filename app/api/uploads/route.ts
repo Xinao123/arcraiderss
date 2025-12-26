@@ -3,44 +3,52 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
-function extFromContentType(ct: string) {
-  const m = ct?.split("/")?.[1]?.toLowerCase();
-  if (!m) return "png";
-  if (m.includes("jpeg")) return "jpg";
-  if (m.includes("png")) return "png";
-  if (m.includes("webp")) return "webp";
-  return "png";
-}
-
 export async function POST(req: Request) {
-  try {
-    const { contentType } = await req.json();
-    if (!contentType) {
-      return NextResponse.json({ error: "contentType é obrigatório." }, { status: 400 });
-    }
+  const contentType = req.headers.get("content-type") || "";
 
-    const bucket = "listing-prints";
-    const ext = extFromContentType(contentType);
-    const path = `prints/${crypto.randomUUID()}.${ext}`;
-
-    const { data, error } = await supabaseAdmin.storage
-      .from(bucket)
-      .createSignedUploadUrl(path);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const publicUrl = supabaseAdmin.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-
-    return NextResponse.json({
-      bucket,
-      path,
-      token: data.token,
-      signedUrl: data.signedUrl,
-      publicUrl,
-    });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Erro inesperado" }, { status: 500 });
+  // Se cair aqui, você está mandando JSON sem querer
+  if (!contentType.includes("multipart/form-data")) {
+    return NextResponse.json(
+      { error: `Content-Type inválido: ${contentType}` },
+      { status: 400 }
+    );
   }
+
+  const form = await req.formData();
+  const file = form.get("file");
+
+  if (!(file instanceof File)) {
+    return NextResponse.json({ error: "Arquivo não enviado (file)." }, { status: 400 });
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  const ext =
+    file.type === "image/png"
+      ? "png"
+      : file.type === "image/webp"
+      ? "webp"
+      : "jpg";
+
+  const path = `listings/${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`;
+
+  const bucket = process.env.SUPABASE_BUCKET ?? "listing-prints";
+
+  const { error: upErr } = await supabaseAdmin.storage
+    .from(bucket)
+    .upload(path, bytes, {
+      contentType: file.type || "image/jpeg",
+      upsert: false,
+    });
+
+  if (upErr) {
+    return NextResponse.json({ error: upErr.message }, { status: 500 });
+  }
+
+  const { data } = supabaseAdmin.storage.from(bucket).getPublicUrl(path);
+
+  return NextResponse.json({
+    publicUrl: data.publicUrl,
+    path,
+  });
 }
