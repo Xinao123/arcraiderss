@@ -16,6 +16,7 @@ function computeExpiresAt(expiresIn?: string | null) {
   return new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 }
 
+
 function slugify(input: string) {
   return input
     .toLowerCase()
@@ -79,7 +80,11 @@ const listings = await prisma.listing.findMany({
   include: { user: true, tags: { include: { tag: true } } },
 });
 
-const expiresAt = computeExpiresAt(body.expiresIn);
+const expiresAt =
+  body.expiresIn
+    ? computeExpiresAt(body.expiresIn)
+    : new Date(Date.now() + Number(body.expiresInDays ?? 3) * 24 * 60 * 60 * 1000);
+
 
     const listing = await prisma.listing.create({
       data: {

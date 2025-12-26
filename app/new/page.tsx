@@ -124,7 +124,7 @@ export default function NewListingPage() {
   const [region, setRegion] = useState("");
   const [steamProfileUrl, setSteamProfileUrl] = useState("");
   const [discordHandle, setDiscordHandle] = useState("");
-  const [expiresIn, setExpiresIn] = useState<"5m" | "1d" | "3d" | "7d">("3d");
+const [expiresIn, setExpiresIn] = useState<"5m" | "1d" | "3d" | "7d">("3d");
 
   // Upload / status
   const [submitting, setSubmitting] = useState(false);
