@@ -180,7 +180,7 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link href="/" className="flex items-center gap-2">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-lg">
-              🧠
+              
             </span>
             <span className="font-semibold tracking-tight">ARC Traders</span>
           </Link>
