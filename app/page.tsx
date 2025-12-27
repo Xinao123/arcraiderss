@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getLang } from "@/lib/getLang";
 import { i18n } from "@/lib/i18n";
 
-
-export const revalidate = 30; 
-
+export const revalidate = 30;
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
@@ -64,6 +62,7 @@ function SectionTitle({
 
 function ListingCard({
   listing,
+  labels,
 }: {
   listing: {
     id: string;
@@ -72,8 +71,18 @@ function ListingCard({
     wantText: string;
     region: string | null;
     createdAt: Date;
-    user: { displayName: string | null; steamProfileUrl: string | null; discordHandle: string | null };
+    user: {
+      displayName: string | null;
+      steamProfileUrl: string | null;
+      discordHandle: string | null;
+    };
     tags: { tagId: string; tag: { name: string } }[];
+  };
+  labels: {
+    offer: string;
+    want: string;
+    discordAvailable: string;
+    noContact: string;
   };
 }) {
   return (
@@ -82,7 +91,7 @@ function ListingCard({
         <div className="aspect-[16/10]" />
         <Image
           src={listing.imageUrl}
-          alt="Print do item"
+          alt="Item screenshot"
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 33vw"
@@ -90,10 +99,10 @@ function ListingCard({
       </div>
 
       <div className="mt-3">
-        <div className="text-xs text-white/50">Ofereço</div>
+        <div className="text-xs text-white/50">{labels.offer}</div>
         <div className="mt-1 line-clamp-1 text-sm font-semibold text-white">{listing.offerText}</div>
 
-        <div className="mt-3 text-xs text-white/50">Quero</div>
+        <div className="mt-3 text-xs text-white/50">{labels.want}</div>
         <div className="mt-1 line-clamp-1 text-sm text-white/80">{listing.wantText}</div>
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -116,10 +125,10 @@ function ListingCard({
             </a>
           ) : listing.user?.discordHandle ? (
             <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-white/70">
-              Discord ok
+              {labels.discordAvailable}
             </span>
           ) : (
-            <span className="text-white/35">sem contato</span>
+            <span className="text-white/35">{labels.noContact}</span>
           )}
         </div>
       </div>
@@ -128,46 +137,51 @@ function ListingCard({
 }
 
 export default async function HomePage() {
+  const lang = await getLang();
+  const t = i18n[lang];
+
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  const [
-    totalListings,
-    activeListings,
-    listingsLast24h,
-    latestListings,
-    topTagCounts,
-  ] = await Promise.all([
-    prisma.listing.count(),
-    prisma.listing.count({ where: { status: "ACTIVE" } }),
-    prisma.listing.count({ where: { status: "ACTIVE", createdAt: { gte: since24h } } }),
-    prisma.listing.findMany({
-      where: { status: "ACTIVE" },
-      take: 6,
-      orderBy: { createdAt: "desc" },
-      include: { user: true, tags: { include: { tag: true } } },
-    }),
-    prisma.listingTag.groupBy({
-      by: ["tagId"],
-      _count: { tagId: true },
-      orderBy: { _count: { tagId: "desc" } },
-      take: 10,
-    }),
-  ]);
+  const [totalListings, activeListings, listingsLast24h, latestListings, topTagCounts] =
+    await Promise.all([
+      prisma.listing.count(),
+      prisma.listing.count({ where: { status: "ACTIVE" } }),
+      prisma.listing.count({ where: { status: "ACTIVE", createdAt: { gte: since24h } } }),
+      prisma.listing.findMany({
+        where: { status: "ACTIVE" },
+        take: 6,
+        orderBy: { createdAt: "desc" },
+        include: { user: true, tags: { include: { tag: true } } },
+      }),
+      prisma.listingTag.groupBy({
+        by: ["tagId"],
+        _count: { tagId: true },
+        orderBy: { _count: { tagId: "desc" } },
+        take: 10,
+      }),
+    ]);
 
   const tags = topTagCounts.length
     ? await prisma.tag.findMany({
-        where: { id: { in: topTagCounts.map((t) => t.tagId) } },
+        where: { id: { in: topTagCounts.map((x) => x.tagId) } },
       })
     : [];
 
-  const tagMap = new Map(tags.map((t) => [t.id, t.name]));
+  const tagMap = new Map(tags.map((x) => [x.id, x.name]));
   const topTags = topTagCounts
-    .map((t) => ({
-      id: t.tagId,
-      name: tagMap.get(t.tagId) ?? "tag",
-      count: t._count.tagId,
+    .map((x) => ({
+      id: x.tagId,
+      name: tagMap.get(x.tagId) ?? "tag",
+      count: x._count.tagId,
     }))
-    .filter((t) => t.name !== "tag");
+    .filter((x) => x.name !== "tag");
+
+  const labels = {
+    offer: lang === "pt" ? "Ofereço" : "Offering",
+    want: lang === "pt" ? "Quero" : "Looking for",
+    discordAvailable: lang === "pt" ? "Discord disponível" : "Discord available",
+    noContact: lang === "pt" ? "sem contato" : "no contact",
+  };
 
   return (
     <main className="min-h-screen bg-[#07080c] text-white">
@@ -183,63 +197,74 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <Badge>3 passos para trocar</Badge>
+            <Badge>{t.home.badge}</Badge>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
-              Posta seu item. A galera vê. Você troca.
-            </h1>
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{t.home.title}</h1>
 
-            <p className="mt-4 text-base leading-relaxed text-white/70">
-              ARC Traders é um feed de trocas direto ao ponto: print do item, o que você quer em troca e um contato.
-              Sem conta, sem cadastro chato.
-            </p>
+            <p className="mt-4 text-base leading-relaxed text-white/70">{t.home.subtitle}</p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/new"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90"
               >
-                Postar agora
+                {t.home.ctaSecondary}
               </Link>
+
               <Link
                 href="/listings"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
               >
-                Abrir o feed
+                {t.home.ctaPrimary}
               </Link>
             </div>
 
-            {/* Real stats (sem users) */}
+            {/* Real stats */}
             <div className="mt-7 grid grid-cols-3 gap-3">
-              <Stat label="Anúncios no total" value={String(totalListings)} hint="tudo que já foi postado" />
-              <Stat label="Novos nas 24h" value={String(listingsLast24h)} hint="movimento recente" />
-              <Stat label="Ativos agora" value={String(activeListings)} hint="aparecem no feed" />
+              <Stat label={t.listings ? t.listings.title : (lang === "pt" ? "Anúncios" : "Listings")} value={String(totalListings)} hint={lang === "pt" ? "tudo que já foi postado" : "everything ever posted"} />
+              <Stat label={lang === "pt" ? "Novos nas 24h" : "New in 24h"} value={String(listingsLast24h)} hint={lang === "pt" ? "movimento recente" : "recent activity"} />
+              <Stat label={lang === "pt" ? "Ativos agora" : "Active now"} value={String(activeListings)} hint={lang === "pt" ? "aparecem no feed" : "visible in the feed"} />
             </div>
 
             {/* Safety / rules */}
             <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/70 backdrop-blur">
-              <div className="font-semibold text-white">Regras rápidas</div>
+              <div className="font-semibold text-white">{lang === "pt" ? "Regras rápidas" : "Quick rules"}</div>
               <ul className="mt-3 space-y-2">
-                <li>✅ Print obrigatório (recorta/zoom pra ficar legível).</li>
-                <li>✅ .</li>
-                <li>✅ .</li>
+                <li>
+                  ✅{" "}
+                  {lang === "pt"
+                    ? "Print obrigatório (recorta/zoom pra ficar legível)."
+                    : "Screenshot required (crop/zoom so the item is readable)."}
+                </li>
+                <li>
+                  ✅{" "}
+                  {lang === "pt"
+                    ? 'Seja específico: “Ofereço” e “Quero” bem descritos.'
+                    : 'Be specific: clear “Offering” and “Looking for” text.'}
+                </li>
+                <li>
+                  ✅{" "}
+                  {lang === "pt"
+                    ? "Sem taxa, sem reserva paga, sem intermediário. Só troca."
+                    : "No fees, no paid reservations, no middleman. Trade-only."}
+                </li>
               </ul>
             </div>
 
             {/* Trending tags */}
             <div className="mt-6">
-              <div className="text-xs text-white/50">Oque esta mais vendendo</div>
+              <div className="text-xs text-white/50">{lang === "pt" ? "Tags em alta" : "Trending tags"}</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {topTags.length ? (
-                  topTags.map((t) => (
-                    <Pill key={t.id}>
-                      {t.name} <span className="text-white/40">({t.count})</span>
+                  topTags.map((x) => (
+                    <Pill key={x.id}>
+                      {x.name} <span className="text-white/40">({x.count})</span>
                     </Pill>
                   ))
                 ) : (
                   <>
-                    <Pill>sem tags ainda</Pill>
-                    <Pill>posta e inaugura</Pill>
+                    <Pill>{lang === "pt" ? "sem tags ainda" : "no tags yet"}</Pill>
+                    <Pill>{lang === "pt" ? "poste e comece a trend" : "post and start the trend"}</Pill>
                   </>
                 )}
               </div>
@@ -250,21 +275,27 @@ export default async function HomePage() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold">Anuncios</div>
-                <div className="text-xs text-white/60">últimas trocas publicadas pela comunidade</div>
+                <div className="text-sm font-semibold">{lang === "pt" ? "Anúncios" : "Listings"}</div>
+                <div className="text-xs text-white/60">
+                  {lang === "pt"
+                    ? "últimas trocas publicadas pela comunidade"
+                    : "latest trades posted by the community"}
+                </div>
               </div>
-              <div className="text-xs text-white/50">24h: {listingsLast24h} novos</div>
+              <div className="text-xs text-white/50">
+                {lang === "pt" ? "24h:" : "24h:"} {listingsLast24h} {lang === "pt" ? "novos" : "new"}
+              </div>
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {latestListings.slice(0, 4).map((l) => (
-                <ListingCard key={l.id} listing={l as any} />
+                <ListingCard key={l.id} listing={l as any} labels={labels} />
               ))}
             </div>
 
             {latestListings.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                Ainda não tem anúncios. Poste e seja o primeiro
+                {lang === "pt" ? "Ainda não tem anúncios. Poste e seja o primeiro." : "No listings yet. Post one and be the first."}
               </div>
             ) : null}
 
@@ -273,7 +304,7 @@ export default async function HomePage() {
                 href="/listings"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
               >
-                Ver todos os anuncios
+                {lang === "pt" ? "Ver todos os anúncios" : "View all listings"}
               </Link>
             </div>
           </div>
@@ -283,14 +314,14 @@ export default async function HomePage() {
       {/* How it works */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
-          title="Como funciona"
-          subtitle="Três passos, zero burocracia."
+          title={lang === "pt" ? "Como funciona" : "How it works"}
+          subtitle={lang === "pt" ? "Três passos, zero burocracia." : "Three steps, zero bureaucracy."}
           right={
             <Link
               href="/new"
               className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 sm:inline-flex"
             >
-              Postar troca
+              {lang === "pt" ? "Postar troca" : "Post a trade"}
             </Link>
           }
         />
@@ -298,31 +329,43 @@ export default async function HomePage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🖼️</div>
-            <div className="mt-3 text-base font-semibold">Sobe o print</div>
+            <div className="mt-3 text-base font-semibold">
+              {lang === "pt" ? "Sobe o print" : "Upload the screenshot"}
+            </div>
             <div className="mt-2 text-sm text-white/70">
-              Print mostra a real. Recorta e dá zoom pra deixar o item nítido.
+              {lang === "pt"
+                ? "Print mostra a real. Recorta e dá zoom pra deixar o item nítido."
+                : "Screenshots keep it real. Crop and zoom so the item is clearly visible."}
             </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🏷️</div>
-            <div className="mt-3 text-base font-semibold">Escreve a troca</div>
+            <div className="mt-3 text-base font-semibold">
+              {lang === "pt" ? "Escreve a troca" : "Write the trade"}
+            </div>
             <div className="mt-2 text-sm text-white/70">
-              “Ofereço” e “Quero” bem descritos fazem a galera te achar rapidinho.
+              {lang === "pt"
+                ? "“Ofereço” e “Quero” bem descritos fazem a galera te achar rapidinho."
+                : "Clear “Offering” and “Looking for” descriptions help people find you fast."}
             </div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🤝</div>
-            <div className="mt-3 text-base font-semibold">Deixa contato</div>
+            <div className="mt-3 text-base font-semibold">
+              {lang === "pt" ? "Deixa contato" : "Leave a contact"}
+            </div>
             <div className="mt-2 text-sm text-white/70">
-              Steam/Discord ou tag no jogo. A negociação acontece direto com você.
+              {lang === "pt"
+                ? "Steam/Discord ou tag no jogo. A negociação acontece direto com você."
+                : "Steam/Discord or your in-game tag. Negotiation happens directly with you."}
             </div>
           </div>
         </div>
 
         <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
-          Fan-made, sem afiliação oficial.🤝
+          {lang === "pt" ? "Fan-made, sem afiliação oficial." : "Fan-made. Not officially affiliated."} 🤝
         </footer>
       </section>
     </main>
