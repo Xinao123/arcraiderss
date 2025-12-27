@@ -63,6 +63,7 @@ function SectionTitle({
 function ListingCard({
   listing,
   labels,
+  lang,
 }: {
   listing: {
     id: string;
@@ -84,6 +85,7 @@ function ListingCard({
     discordAvailable: string;
     noContact: string;
   };
+  lang: "pt" | "en";
 }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur transition hover:border-white/20 hover:bg-white/10">
@@ -91,7 +93,7 @@ function ListingCard({
         <div className="aspect-[16/10]" />
         <Image
           src={listing.imageUrl}
-          alt="Item screenshot"
+          alt={lang === "pt" ? "Print do item" : "Item screenshot"}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 33vw"
@@ -197,33 +199,33 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <Badge>{t.home.badge}</Badge>
+            <Badge>{t.badge}</Badge>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{t.home.title}</h1>
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{t.title}</h1>
 
-            <p className="mt-4 text-base leading-relaxed text-white/70">{t.home.subtitle}</p>
+            <p className="mt-4 text-base leading-relaxed text-white/70">{t.subtitle}</p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/new"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black hover:opacity-90"
               >
-                {t.home.ctaSecondary}
+                {t.postNow}
               </Link>
 
               <Link
                 href="/listings"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
               >
-                {t.home.ctaPrimary}
+                {t.openFeed}
               </Link>
             </div>
 
             {/* Real stats */}
             <div className="mt-7 grid grid-cols-3 gap-3">
-              <Stat label={t.listings ? t.listings.title : (lang === "pt" ? "Anúncios" : "Listings")} value={String(totalListings)} hint={lang === "pt" ? "tudo que já foi postado" : "everything ever posted"} />
-              <Stat label={lang === "pt" ? "Novos nas 24h" : "New in 24h"} value={String(listingsLast24h)} hint={lang === "pt" ? "movimento recente" : "recent activity"} />
-              <Stat label={lang === "pt" ? "Ativos agora" : "Active now"} value={String(activeListings)} hint={lang === "pt" ? "aparecem no feed" : "visible in the feed"} />
+              <Stat label={t.total} value={String(totalListings)} hint={t.totalHint} />
+              <Stat label={t.new24h} value={String(listingsLast24h)} hint={t.new24hHint} />
+              <Stat label={t.activeNow} value={String(activeListings)} hint={t.activeNowHint} />
             </div>
 
             {/* Safety / rules */}
@@ -283,19 +285,21 @@ export default async function HomePage() {
                 </div>
               </div>
               <div className="text-xs text-white/50">
-                {lang === "pt" ? "24h:" : "24h:"} {listingsLast24h} {lang === "pt" ? "novos" : "new"}
+                24h: {listingsLast24h} {lang === "pt" ? "novos" : "new"}
               </div>
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {latestListings.slice(0, 4).map((l) => (
-                <ListingCard key={l.id} listing={l as any} labels={labels} />
+                <ListingCard key={l.id} listing={l as any} labels={labels} lang={lang} />
               ))}
             </div>
 
             {latestListings.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                {lang === "pt" ? "Ainda não tem anúncios. Poste e seja o primeiro." : "No listings yet. Post one and be the first."}
+                {lang === "pt"
+                  ? "Ainda não tem anúncios. Poste e seja o primeiro."
+                  : "No listings yet. Post one and be the first."}
               </div>
             ) : null}
 
@@ -329,9 +333,7 @@ export default async function HomePage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🖼️</div>
-            <div className="mt-3 text-base font-semibold">
-              {lang === "pt" ? "Sobe o print" : "Upload the screenshot"}
-            </div>
+            <div className="mt-3 text-base font-semibold">{lang === "pt" ? "Sobe o print" : "Upload the screenshot"}</div>
             <div className="mt-2 text-sm text-white/70">
               {lang === "pt"
                 ? "Print mostra a real. Recorta e dá zoom pra deixar o item nítido."
@@ -341,9 +343,7 @@ export default async function HomePage() {
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🏷️</div>
-            <div className="mt-3 text-base font-semibold">
-              {lang === "pt" ? "Escreve a troca" : "Write the trade"}
-            </div>
+            <div className="mt-3 text-base font-semibold">{lang === "pt" ? "Escreve a troca" : "Write the trade"}</div>
             <div className="mt-2 text-sm text-white/70">
               {lang === "pt"
                 ? "“Ofereço” e “Quero” bem descritos fazem a galera te achar rapidinho."
@@ -353,9 +353,7 @@ export default async function HomePage() {
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🤝</div>
-            <div className="mt-3 text-base font-semibold">
-              {lang === "pt" ? "Deixa contato" : "Leave a contact"}
-            </div>
+            <div className="mt-3 text-base font-semibold">{lang === "pt" ? "Deixa contato" : "Leave a contact"}</div>
             <div className="mt-2 text-sm text-white/70">
               {lang === "pt"
                 ? "Steam/Discord ou tag no jogo. A negociação acontece direto com você."
