@@ -8,6 +8,7 @@ import type { Lang } from "@/lib/getLang";
 import { i18n } from "@/lib/i18n";
 
 type PixelCrop = { x: number; y: number; width: number; height: number };
+type ImgSize = { w: number; h: number };
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
@@ -47,7 +48,6 @@ function detectClientLang(): Lang {
   return "en";
 }
 
-
 function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
@@ -69,8 +69,19 @@ function rotateSize(width: number, height: number, rotation: number) {
   };
 }
 
-// Sem limite de pixel: canvas final = tamanho exato do recorte.
-// Com rotação: desenha a imagem girada num canvas “safe”, depois recorta.
+function pickMime(file: File | null): "image/jpeg" | "image/png" | "image/webp" {
+  if (!file) return "image/jpeg";
+  if (file.type === "image/png") return "image/png";
+  if (file.type === "image/webp") return "image/webp";
+  return "image/jpeg";
+}
+
+function extFromMime(m: string) {
+  if (m === "image/png") return "png";
+  if (m === "image/webp") return "webp";
+  return "jpg";
+}
+
 async function cropToFile(
   imageSrc: string,
   crop: PixelCrop,
@@ -80,34 +91,61 @@ async function cropToFile(
   quality = 0.92
 ): Promise<File> {
   const image = await createImage(imageSrc);
+
+  const iw = image.naturalWidth || image.width;
+  const ih = image.naturalHeight || image.height;
+
   const rotRad = getRadianAngle(rotationDeg);
 
+  // canvas “safe” com a imagem rotacionada inteira
   const safeCanvas = document.createElement("canvas");
   const safeCtx = safeCanvas.getContext("2d");
-  if (!safeCtx) throw new Error("Canvas ctx unavailable.");
+  if (!safeCtx) throw new Error("Canvas ctx não disponível.");
 
-  const { width: bW, height: bH } = rotateSize(image.width, image.height, rotationDeg);
+  safeCtx.imageSmoothingEnabled = true;
+  safeCtx.imageSmoothingQuality = "high";
+
+  const { width: bW, height: bH } = rotateSize(iw, ih, rotationDeg);
   safeCanvas.width = Math.ceil(bW);
   safeCanvas.height = Math.ceil(bH);
 
   safeCtx.translate(safeCanvas.width / 2, safeCanvas.height / 2);
   safeCtx.rotate(rotRad);
-  safeCtx.translate(-image.width / 2, -image.height / 2);
-  safeCtx.drawImage(image, 0, 0);
+  safeCtx.translate(-iw / 2, -ih / 2);
+  safeCtx.drawImage(image, 0, 0, iw, ih);
 
+  // canvas final: exatamente o tamanho do recorte
   const outCanvas = document.createElement("canvas");
   const outCtx = outCanvas.getContext("2d");
-  if (!outCtx) throw new Error("Canvas ctx unavailable.");
+  if (!outCtx) throw new Error("Canvas ctx não disponível.");
+
+  outCtx.imageSmoothingEnabled = true;
+  outCtx.imageSmoothingQuality = "high";
 
   const w = Math.max(1, Math.round(crop.width));
   const h = Math.max(1, Math.round(crop.height));
+
   outCanvas.width = w;
   outCanvas.height = h;
 
-  outCtx.drawImage(safeCanvas, Math.round(crop.x), Math.round(crop.y), w, h, 0, 0, w, h);
+  outCtx.drawImage(
+    safeCanvas,
+    Math.round(crop.x),
+    Math.round(crop.y),
+    w,
+    h,
+    0,
+    0,
+    w,
+    h
+  );
 
   const blob: Blob = await new Promise((resolve, reject) => {
-    outCanvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to generate crop blob."))), mime, quality);
+    outCanvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Falha ao gerar blob do recorte."))),
+      mime,
+      mime === "image/png" ? undefined : quality
+    );
   });
 
   return new File([blob], filename, { type: mime });
@@ -134,26 +172,26 @@ export default function NewListingPage() {
   const t = tAll.new;
 
   useEffect(() => {
-  const onEvent = (e: Event) => {
-    const next = (e as CustomEvent<Lang>).detail;
-    if (next === "pt" || next === "en") setLang(next);
-    else setLang(detectClientLang());
-  };
+    const onEvent = (e: Event) => {
+      const next = (e as CustomEvent<Lang>).detail;
+      if (next === "pt" || next === "en") setLang(next);
+      else setLang(detectClientLang());
+    };
 
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === "arc_lang" && (e.newValue === "pt" || e.newValue === "en")) {
-      setLang(e.newValue);
-    }
-  };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "arc_lang" && (e.newValue === "pt" || e.newValue === "en")) {
+        setLang(e.newValue);
+      }
+    };
 
-  window.addEventListener("arc:lang", onEvent as any);
-  window.addEventListener("storage", onStorage);
+    window.addEventListener("arc:lang", onEvent as any);
+    window.addEventListener("storage", onStorage);
 
-  return () => {
-    window.removeEventListener("arc:lang", onEvent as any);
-    window.removeEventListener("storage", onStorage);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("arc:lang", onEvent as any);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // Form fields
   const [offerText, setOfferText] = useState("");
@@ -171,6 +209,7 @@ export default function NewListingPage() {
   // Image state
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
+  const [imgSize, setImgSize] = useState<ImgSize | null>(null);
 
   const [croppedFile, setCroppedFile] = useState<File | null>(null);
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
@@ -178,17 +217,21 @@ export default function NewListingPage() {
   // Crop modal
   const [rawSrc, setRawSrc] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
-  const [cropMode, setCropMode] = useState<"horizontal" | "vertical">("horizontal");
-  const aspect = useMemo(() => (cropMode === "horizontal" ? 16 / 10 : 10 / 16), [cropMode]);
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<PixelCrop | null>(null);
 
+  const aspect = useMemo(() => {
+    // mantém a proporção original da imagem (sem forçar 16:10)
+    if (imgSize?.w && imgSize?.h) return imgSize.w / imgSize.h;
+    return 4 / 3;
+  }, [imgSize]);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // cleanup object URLs
+  // cleanup object URLs (unmount)
   useEffect(() => {
     return () => {
       if (originalPreview) URL.revokeObjectURL(originalPreview);
@@ -198,7 +241,15 @@ export default function NewListingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function onPickFile(file: File) {
+  function splitTags(text: string) {
+    return text
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+  }
+
+  async function onPickFile(file: File) {
     setError(null);
 
     if (originalPreview) URL.revokeObjectURL(originalPreview);
@@ -209,24 +260,38 @@ export default function NewListingPage() {
     setOriginalFile(file);
     setOriginalPreview(url);
 
+    // ao trocar imagem, volta pro "original"
     setCroppedFile(null);
     setCroppedPreview(null);
 
-    setRawSrc(url);
+    setRawSrc(null);
     setCrop({ x: 0, y: 0 });
     setZoom(1);
     setRotation(0);
     setCroppedAreaPixels(null);
-    setCropMode("horizontal");
-    setIsCropping(true);
+
+    // pega tamanho real pra manter proporção no recorte (quando abrir)
+    try {
+      const img = await createImage(url);
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      setImgSize({ w, h });
+    } catch {
+      setImgSize(null);
+    }
   }
 
-  function splitTags(text: string) {
-    return text
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean)
-      .slice(0, 20);
+  function openCropper() {
+    if (!originalPreview) return;
+    setError(null);
+
+    // abre com a imagem original (nada forçado)
+    setRawSrc(originalPreview);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setRotation(0);
+    setCroppedAreaPixels(null);
+    setIsCropping(true);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -262,7 +327,9 @@ export default function NewListingPage() {
         );
       }
 
-      const imageUrl = up.json?.publicUrl ?? up.json?.url ?? up.json?.imageUrl ?? up.json?.data?.publicUrl;
+      const imageUrl =
+        up.json?.publicUrl ?? up.json?.url ?? up.json?.imageUrl ?? up.json?.data?.publicUrl;
+
       if (!imageUrl) throw new Error(`${t.errUploadFail}: missing publicUrl/url.`);
 
       // 2) create listing
@@ -460,13 +527,13 @@ export default function NewListingPage() {
 
             <div className="mt-4">
               {croppedPreview || originalPreview ? (
-                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                  <div className="aspect-[16/10]" />
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                  {/* preview respeita a proporção original (sem forçar) */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={croppedPreview ?? originalPreview!}
                     alt={t.previewAlt}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="block h-auto w-full object-contain"
                   />
                 </div>
               ) : (
@@ -480,15 +547,7 @@ export default function NewListingPage() {
               <button
                 type="button"
                 disabled={!originalPreview}
-                onClick={() => {
-                  if (!originalPreview) return;
-                  setRawSrc(originalPreview);
-                  setCrop({ x: 0, y: 0 });
-                  setZoom(1);
-                  setRotation(0);
-                  setCroppedAreaPixels(null);
-                  setIsCropping(true);
-                }}
+                onClick={openCropper}
                 className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-40"
               >
                 {t.cropBtn}
@@ -516,7 +575,7 @@ export default function NewListingPage() {
               {submitting ? t.submitting : t.submit}
             </button>
 
-            <div className="mt-4 text-xs text-white/55">{t.footer} 🤝</div>
+            <div className="mt-4 text-xs text-white/55">{t.footer}</div>
           </div>
         </form>
       </div>
@@ -534,30 +593,6 @@ export default function NewListingPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => setCropMode("horizontal")}
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
-                    cropMode === "horizontal"
-                      ? "border-white/25 bg-white/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                  }`}
-                >
-                  {t.horizontal}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCropMode("vertical")}
-                  className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
-                    cropMode === "vertical"
-                      ? "border-white/25 bg-white/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                  }`}
-                >
-                  {t.vertical}
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => setRotation((r) => (r + 90) % 360)}
                   className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
                   title={t.rotate90}
@@ -569,7 +604,8 @@ export default function NewListingPage() {
 
             <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_260px]">
               <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                <div className="aspect-[16/10] w-full" />
+                {/* altura fixa pra cropper funcionar bem, sem forçar proporção */}
+                <div className="h-[360px] w-full sm:h-[420px]" />
                 <Cropper
                   image={rawSrc}
                   crop={crop}
@@ -606,13 +642,16 @@ export default function NewListingPage() {
                       try {
                         if (!croppedAreaPixels) return;
 
+                        const mime = pickMime(originalFile);
+                        const ext = extFromMime(mime);
+
                         const file = await cropToFile(
                           rawSrc,
                           croppedAreaPixels,
                           rotation,
-                          `arc-traders-${Date.now()}.jpg`,
-                          "image/jpeg",
-                          0.92
+                          `arc-traders-${Date.now()}.${ext}`,
+                          mime,
+                          mime === "image/jpeg" ? 0.92 : 1
                         );
 
                         if (croppedPreview) URL.revokeObjectURL(croppedPreview);
@@ -641,6 +680,15 @@ export default function NewListingPage() {
                     {t.cancel}
                   </button>
                 </div>
+
+                {imgSize ? (
+                  <div className="mt-4 text-xs text-white/50">
+                    {lang === "pt" ? "Tamanho da imagem:" : "Image size:"}{" "}
+                    <span className="text-white/70">
+                      {imgSize.w}×{imgSize.h}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

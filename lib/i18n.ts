@@ -323,7 +323,7 @@ export const i18n = {
       tagsPh: "Ex.: melhoria, raro, bateria, kit médico, Brasil…",
 
       regionLabel: "Região (opcional)",
-      regionPh: "Ex.: Brasil / América do Sul / América do Norte / Europa…",
+      regionPh: "Ex.: SA / NA / EU / OCE",
 
       expiresLabel: "Prazo do anúncio",
       expiresHint: "Depois desse prazo, o anúncio sai da lista automaticamente.",
@@ -599,7 +599,7 @@ export const i18n = {
       tagsPh: "Example: upgrade, rare, battery, med kit, Brazil…",
 
       regionLabel: "Region (optional)",
-      regionPh: "Example: Brazil / South America / North America / Europe…",
+      regionPh: "Example: SA  / NA / EU / OCE...",
 
       expiresLabel: "Post duration",
       expiresHint: "After this time, the post is removed from the list automatically.",
