@@ -71,7 +71,11 @@ function ListingCard({
     wantText: string;
     region: string | null;
     createdAt: Date;
-    user: { displayName: string | null; steamProfileUrl: string | null; discordHandle: string | null };
+    user: {
+      displayName: string | null;
+      steamProfileUrl: string | null;
+      discordHandle: string | null;
+    };
     tags: { tagId: string; tag: { name: string } }[];
   };
   t: {
@@ -84,20 +88,24 @@ function ListingCard({
 }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur transition hover:border-white/20 hover:bg-white/10">
+      {/* ✅ IMAGEM: qualquer resolução, sem cortar (prioriza qualidade) */}
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-        <div className="aspect-[16/10]" />
-        <Image
-          src={listing.imageUrl}
-          alt={t.imageAlt}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+        <div className="relative h-[220px] w-full">
+          <Image
+            src={listing.imageUrl}
+            alt={t.imageAlt}
+            fill
+            className="object-contain"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        </div>
       </div>
 
       <div className="mt-3">
         <div className="text-xs text-white/50">{t.cardOffer}</div>
-        <div className="mt-1 line-clamp-1 text-sm font-semibold text-white">{listing.offerText}</div>
+        <div className="mt-1 line-clamp-1 text-sm font-semibold text-white">
+          {listing.offerText}
+        </div>
 
         <div className="mt-3 text-xs text-white/50">{t.cardWant}</div>
         <div className="mt-1 line-clamp-1 text-sm text-white/80">{listing.wantText}</div>
@@ -178,7 +186,9 @@ export default async function HomePage() {
       {/* Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(70%_45%_at_50%_0%,rgba(255,255,255,0.12),rgba(7,8,12,0))]" />
-        <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.10)_1px,transparent_1px)] [background-size:72px_72px]" />
+        <div
+          className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.10)_1px,transparent_1px)] [background-size:72px_72px]"
+        />
         <div className="absolute -top-24 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
       </div>
@@ -189,7 +199,9 @@ export default async function HomePage() {
           <div>
             <Badge>{t.badge}</Badge>
 
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">{t.title}</h1>
+            <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
+              {t.title}
+            </h1>
 
             <p className="mt-4 text-base leading-relaxed text-white/70">{t.subtitle}</p>
 
@@ -325,7 +337,9 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">{t.footer}</footer>
+        <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
+          {t.footer}
+        </footer>
       </section>
     </main>
   );
