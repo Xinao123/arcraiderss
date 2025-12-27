@@ -62,8 +62,7 @@ function SectionTitle({
 
 function ListingCard({
   listing,
-  labels,
-  lang,
+  t,
 }: {
   listing: {
     id: string;
@@ -72,20 +71,16 @@ function ListingCard({
     wantText: string;
     region: string | null;
     createdAt: Date;
-    user: {
-      displayName: string | null;
-      steamProfileUrl: string | null;
-      discordHandle: string | null;
-    };
+    user: { displayName: string | null; steamProfileUrl: string | null; discordHandle: string | null };
     tags: { tagId: string; tag: { name: string } }[];
   };
-  labels: {
-    offer: string;
-    want: string;
+  t: {
+    cardOffer: string;
+    cardWant: string;
     discordAvailable: string;
     noContact: string;
+    imageAlt: string;
   };
-  lang: "pt" | "en";
 }) {
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur transition hover:border-white/20 hover:bg-white/10">
@@ -93,7 +88,7 @@ function ListingCard({
         <div className="aspect-[16/10]" />
         <Image
           src={listing.imageUrl}
-          alt={lang === "pt" ? "Print do item" : "Item screenshot"}
+          alt={t.imageAlt}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 33vw"
@@ -101,15 +96,15 @@ function ListingCard({
       </div>
 
       <div className="mt-3">
-        <div className="text-xs text-white/50">{labels.offer}</div>
+        <div className="text-xs text-white/50">{t.cardOffer}</div>
         <div className="mt-1 line-clamp-1 text-sm font-semibold text-white">{listing.offerText}</div>
 
-        <div className="mt-3 text-xs text-white/50">{labels.want}</div>
+        <div className="mt-3 text-xs text-white/50">{t.cardWant}</div>
         <div className="mt-1 line-clamp-1 text-sm text-white/80">{listing.wantText}</div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          {listing.tags.slice(0, 6).map((t) => (
-            <Pill key={t.tagId}>{t.tag.name}</Pill>
+          {listing.tags.slice(0, 6).map((x) => (
+            <Pill key={x.tagId}>{x.tag.name}</Pill>
           ))}
         </div>
 
@@ -127,10 +122,10 @@ function ListingCard({
             </a>
           ) : listing.user?.discordHandle ? (
             <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-white/70">
-              {labels.discordAvailable}
+              {t.discordAvailable}
             </span>
           ) : (
-            <span className="text-white/35">{labels.noContact}</span>
+            <span className="text-white/35">{t.noContact}</span>
           )}
         </div>
       </div>
@@ -178,13 +173,6 @@ export default async function HomePage() {
     }))
     .filter((x) => x.name !== "tag");
 
-  const labels = {
-    offer: lang === "pt" ? "Ofereço" : "Offering",
-    want: lang === "pt" ? "Quero" : "Looking for",
-    discordAvailable: lang === "pt" ? "Discord disponível" : "Discord available",
-    noContact: lang === "pt" ? "sem contato" : "no contact",
-  };
-
   return (
     <main className="min-h-screen bg-[#07080c] text-white">
       {/* Background */}
@@ -212,7 +200,6 @@ export default async function HomePage() {
               >
                 {t.postNow}
               </Link>
-
               <Link
                 href="/listings"
                 className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
@@ -221,41 +208,23 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {/* Real stats */}
             <div className="mt-7 grid grid-cols-3 gap-3">
               <Stat label={t.total} value={String(totalListings)} hint={t.totalHint} />
               <Stat label={t.new24h} value={String(listingsLast24h)} hint={t.new24hHint} />
               <Stat label={t.activeNow} value={String(activeListings)} hint={t.activeNowHint} />
             </div>
 
-            {/* Safety / rules */}
             <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-white/70 backdrop-blur">
-              <div className="font-semibold text-white">{lang === "pt" ? "Regras rápidas" : "Quick rules"}</div>
+              <div className="font-semibold text-white">{t.rulesTitle}</div>
               <ul className="mt-3 space-y-2">
-                <li>
-                  ✅{" "}
-                  {lang === "pt"
-                    ? "Print obrigatório (recorta/zoom pra ficar legível)."
-                    : "Screenshot required (crop/zoom so the item is readable)."}
-                </li>
-                <li>
-                  ✅{" "}
-                  {lang === "pt"
-                    ? 'Seja específico: “Ofereço” e “Quero” bem descritos.'
-                    : 'Be specific: clear “Offering” and “Looking for” text.'}
-                </li>
-                <li>
-                  ✅{" "}
-                  {lang === "pt"
-                    ? "Sem taxa, sem reserva paga, sem intermediário. Só troca."
-                    : "No fees, no paid reservations, no middleman. Trade-only."}
-                </li>
+                <li>✅ {t.rules1}</li>
+                <li>✅ {t.rules2}</li>
+                <li>✅ {t.rules3}</li>
               </ul>
             </div>
 
-            {/* Trending tags */}
             <div className="mt-6">
-              <div className="text-xs text-white/50">{lang === "pt" ? "Tags em alta" : "Trending tags"}</div>
+              <div className="text-xs text-white/50">{t.trendingTitle}</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {topTags.length ? (
                   topTags.map((x) => (
@@ -265,8 +234,8 @@ export default async function HomePage() {
                   ))
                 ) : (
                   <>
-                    <Pill>{lang === "pt" ? "sem tags ainda" : "no tags yet"}</Pill>
-                    <Pill>{lang === "pt" ? "poste e comece a trend" : "post and start the trend"}</Pill>
+                    <Pill>{t.noTags1}</Pill>
+                    <Pill>{t.noTags2}</Pill>
                   </>
                 )}
               </div>
@@ -277,29 +246,35 @@ export default async function HomePage() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold">{lang === "pt" ? "Anúncios" : "Listings"}</div>
-                <div className="text-xs text-white/60">
-                  {lang === "pt"
-                    ? "últimas trocas publicadas pela comunidade"
-                    : "latest trades posted by the community"}
-                </div>
+                <div className="text-sm font-semibold">{t.previewTitle}</div>
+                <div className="text-xs text-white/60">{t.previewSubtitle}</div>
               </div>
               <div className="text-xs text-white/50">
-                24h: {listingsLast24h} {lang === "pt" ? "novos" : "new"}
+                {t.previewNewPrefix}
+                {listingsLast24h}
+                {t.previewNewSuffix}
               </div>
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {latestListings.slice(0, 4).map((l) => (
-                <ListingCard key={l.id} listing={l as any} labels={labels} lang={lang} />
+                <ListingCard
+                  key={l.id}
+                  listing={l as any}
+                  t={{
+                    cardOffer: t.cardOffer,
+                    cardWant: t.cardWant,
+                    discordAvailable: t.discordAvailable,
+                    noContact: t.noContact,
+                    imageAlt: t.imageAlt,
+                  }}
+                />
               ))}
             </div>
 
             {latestListings.length === 0 ? (
               <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-6 text-sm text-white/70">
-                {lang === "pt"
-                  ? "Ainda não tem anúncios. Poste e seja o primeiro."
-                  : "No listings yet. Post one and be the first."}
+                {t.emptyPreview}
               </div>
             ) : null}
 
@@ -308,7 +283,7 @@ export default async function HomePage() {
                 href="/listings"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
               >
-                {lang === "pt" ? "Ver todos os anúncios" : "View all listings"}
+                {t.viewAll}
               </Link>
             </div>
           </div>
@@ -318,14 +293,14 @@ export default async function HomePage() {
       {/* How it works */}
       <section className="mx-auto max-w-6xl px-4 pb-16">
         <SectionTitle
-          title={lang === "pt" ? "Como funciona" : "How it works"}
-          subtitle={lang === "pt" ? "Três passos, zero burocracia." : "Three steps, zero bureaucracy."}
+          title={t.howTitle}
+          subtitle={t.howSubtitle}
           right={
             <Link
               href="/new"
               className="hidden rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 sm:inline-flex"
             >
-              {lang === "pt" ? "Postar troca" : "Post a trade"}
+              {t.howCta}
             </Link>
           }
         />
@@ -333,38 +308,24 @@ export default async function HomePage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🖼️</div>
-            <div className="mt-3 text-base font-semibold">{lang === "pt" ? "Sobe o print" : "Upload the screenshot"}</div>
-            <div className="mt-2 text-sm text-white/70">
-              {lang === "pt"
-                ? "Print mostra a real. Recorta e dá zoom pra deixar o item nítido."
-                : "Screenshots keep it real. Crop and zoom so the item is clearly visible."}
-            </div>
+            <div className="mt-3 text-base font-semibold">{t.step1Title}</div>
+            <div className="mt-2 text-sm text-white/70">{t.step1Desc}</div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🏷️</div>
-            <div className="mt-3 text-base font-semibold">{lang === "pt" ? "Escreve a troca" : "Write the trade"}</div>
-            <div className="mt-2 text-sm text-white/70">
-              {lang === "pt"
-                ? "“Ofereço” e “Quero” bem descritos fazem a galera te achar rapidinho."
-                : "Clear “Offering” and “Looking for” descriptions help people find you fast."}
-            </div>
+            <div className="mt-3 text-base font-semibold">{t.step2Title}</div>
+            <div className="mt-2 text-sm text-white/70">{t.step2Desc}</div>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur">
             <div className="text-lg">🤝</div>
-            <div className="mt-3 text-base font-semibold">{lang === "pt" ? "Deixa contato" : "Leave a contact"}</div>
-            <div className="mt-2 text-sm text-white/70">
-              {lang === "pt"
-                ? "Steam/Discord ou tag no jogo. A negociação acontece direto com você."
-                : "Steam/Discord or your in-game tag. Negotiation happens directly with you."}
-            </div>
+            <div className="mt-3 text-base font-semibold">{t.step3Title}</div>
+            <div className="mt-2 text-sm text-white/70">{t.step3Desc}</div>
           </div>
         </div>
 
-        <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
-          {lang === "pt" ? "Fan-made, sem afiliação oficial." : "Fan-made. Not officially affiliated."} 🤝
-        </footer>
+        <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">{t.footer}</footer>
       </section>
     </main>
   );
