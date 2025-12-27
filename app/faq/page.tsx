@@ -1,25 +1,10 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { getLang } from "@/lib/getLang";
 import { i18n } from "@/lib/i18n";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const lang = await getLang();
-
-  if (lang === "pt") {
-    return {
-      title: "FAQ | ARC Traders",
-      description:
-        "Dúvidas frequentes sobre anúncios, expiração, segurança e como trocar itens no ARC Traders.",
-    };
-  }
-
-  return {
-    title: "FAQ | ARC Traders",
-    description:
-      "Frequently asked questions about listings, expiration, safety, and how trading works on ARC Traders.",
-  };
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const runtime = "nodejs";
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
@@ -60,13 +45,7 @@ function FAQItem({
   );
 }
 
-function SectionTitle({
-  title,
-  subtitle,
-}: {
-  title: string;
-  subtitle?: string;
-}) {
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div>
       <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
@@ -75,12 +54,22 @@ function SectionTitle({
   );
 }
 
+export async function generateMetadata() {
+  const lang = await getLang();
+  const t = i18n[lang].faq;
+
+  return {
+    title: t.metaTitle,
+    description: t.metaDescription,
+  };
+}
+
 export default async function FAQPage() {
   const lang = await getLang();
   const t = i18n[lang].faq;
 
   return (
-    <main className="min-h-screen bg-[#07080c] text-white">
+    <main className="min-h-screen bg-[#07080c] pt-20 text-white">
       {/* Background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(70%_45%_at_50%_0%,rgba(255,255,255,0.12),rgba(7,8,12,0))]" />
@@ -90,7 +79,7 @@ export default async function FAQPage() {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <Badge>{t.badge}</Badge>
+        <Badge>🧩 {t.badge}</Badge>
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -124,11 +113,9 @@ export default async function FAQPage() {
                 <FAQItem q={t.g1q} defaultOpen openLabel={t.open} closeLabel={t.close}>
                   {t.g1a}
                 </FAQItem>
-
                 <FAQItem q={t.g2q} openLabel={t.open} closeLabel={t.close}>
                   {t.g2a}
                 </FAQItem>
-
                 <FAQItem q={t.g3q} openLabel={t.open} closeLabel={t.close}>
                   {t.g3a}
                 </FAQItem>
@@ -136,21 +123,17 @@ export default async function FAQPage() {
             </section>
 
             <section id="postar" className="space-y-4">
-              <SectionTitle title={t.postTitle} subtitle={t.postSubtitle} />
+              <SectionTitle title={t.postingTitle} subtitle={t.postingSubtitle} />
               <div className="space-y-3">
                 <FAQItem q={t.p1q} openLabel={t.open} closeLabel={t.close}>
-                  {t.p1a1} <b>{t.p1b1}</b>, <b>{t.p1b2}</b> {lang === "pt" ? "bem escrito" : "clearly written"}{" "}
-                  {lang === "pt" ? "e" : "and"} <b>{t.p1b3}</b>. {t.p1a2}
+                  {t.p1a}
                 </FAQItem>
-
                 <FAQItem q={t.p2q} openLabel={t.open} closeLabel={t.close}>
                   {t.p2a}
                 </FAQItem>
-
                 <FAQItem q={t.p3q} openLabel={t.open} closeLabel={t.close}>
                   {t.p3a}
                 </FAQItem>
-
                 <FAQItem q={t.p4q} openLabel={t.open} closeLabel={t.close}>
                   {t.p4a}
                 </FAQItem>
@@ -158,12 +141,11 @@ export default async function FAQPage() {
             </section>
 
             <section id="expiracao" className="space-y-4">
-              <SectionTitle title={t.expTitle} subtitle={t.expSubtitle} />
+              <SectionTitle title={t.expirationTitle} subtitle={t.expirationSubtitle} />
               <div className="space-y-3">
                 <FAQItem q={t.e1q} openLabel={t.open} closeLabel={t.close}>
                   {t.e1a}
                 </FAQItem>
-
                 <FAQItem q={t.e2q} openLabel={t.open} closeLabel={t.close}>
                   {t.e2a}
                 </FAQItem>
@@ -176,11 +158,9 @@ export default async function FAQPage() {
                 <FAQItem q={t.s1q} openLabel={t.open} closeLabel={t.close}>
                   {t.s1a}
                 </FAQItem>
-
                 <FAQItem q={t.s2q} openLabel={t.open} closeLabel={t.close}>
                   {t.s2a}
                 </FAQItem>
-
                 <FAQItem q={t.s3q} openLabel={t.open} closeLabel={t.close}>
                   {t.s3a}
                 </FAQItem>
@@ -193,7 +173,6 @@ export default async function FAQPage() {
                 <FAQItem q={t.pr1q} openLabel={t.open} closeLabel={t.close}>
                   {t.pr1a}
                 </FAQItem>
-
                 <FAQItem q={t.pr2q} openLabel={t.open} closeLabel={t.close}>
                   {t.pr2a}
                 </FAQItem>
@@ -206,7 +185,6 @@ export default async function FAQPage() {
                 <FAQItem q={t.i1q} openLabel={t.open} closeLabel={t.close}>
                   {t.i1a}
                 </FAQItem>
-
                 <FAQItem q={t.i2q} openLabel={t.open} closeLabel={t.close}>
                   {t.i2a}
                 </FAQItem>
@@ -229,13 +207,13 @@ export default async function FAQPage() {
                   href="#postar"
                   className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/75 hover:bg-white/10"
                 >
-                  {t.shPost}
+                  {t.shPosting}
                 </a>
                 <a
                   href="#expiracao"
                   className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/75 hover:bg-white/10"
                 >
-                  {t.shExp}
+                  {t.shExpiration}
                 </a>
                 <a
                   href="#seguranca"
