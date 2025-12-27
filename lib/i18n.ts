@@ -405,7 +405,7 @@ export const i18n = {
       emptyFilters: "Não encontramos resultados. Tente mudar a região, as palavras ou a busca.",
 
       imageAlt: "Imagem do item",
-      pillPrint: "imagem",
+      pillPrint: "",
 
       createdAtTz: "",
       dash: "—",
@@ -681,7 +681,7 @@ export const i18n = {
       emptyFilters: "No results found. Try changing the region, keywords, or search.",
 
       imageAlt: "Item image",
-      pillPrint: "image",
+      pillPrint: "",
 
       createdAtTz: "",
       dash: "—",
