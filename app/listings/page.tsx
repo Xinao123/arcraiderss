@@ -3,6 +3,8 @@ import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { getLang } from "@/lib/getLang";
+import { i18n } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -17,8 +19,9 @@ function firstParam(sp: SearchParams, key: string, fallback = "") {
   return (v ?? fallback).toString();
 }
 
-function formatDateBR(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
+function formatDate(d: Date, lang: "pt" | "en") {
+  const locale = lang === "pt" ? "pt-BR" : "en-US";
+  return new Intl.DateTimeFormat(locale, {
     timeZone: "America/Sao_Paulo",
     day: "2-digit",
     month: "2-digit",
@@ -28,19 +31,21 @@ function formatDateBR(d: Date) {
     timeZoneName: "short",
   }).format(d);
 }
-function timeLeft(expiresAt: Date, now: Date) {
+
+function timeLeft(expiresAt: Date, now: Date, t: any) {
   const ms = expiresAt.getTime() - now.getTime();
-  if (ms <= 0) return "expirado";
+  if (ms <= 0) return t.expiresExpired;
+
   const min = Math.floor(ms / 60000);
   const h = Math.floor(min / 60);
   const d = Math.floor(h / 24);
 
-  if (d >= 2) return `expira em ${d} dias`;
-  if (d === 1) return "expira em 1 dia";
-  if (h >= 2) return `expira em ${h}h`;
-  if (h === 1) return "expira em 1h";
-  if (min >= 2) return `expira em ${min}min`;
-  return "expira em instantes";
+  if (d >= 2) return `${t.expiresIn} ${d} ${t.days}`;
+  if (d === 1) return `${t.expiresIn} 1 ${t.day}`;
+  if (h >= 2) return `${t.expiresIn} ${h}${t.hourShort}`;
+  if (h === 1) return `${t.expiresIn} 1${t.hourShort}`;
+  if (min >= 2) return `${t.expiresIn} ${min}${t.minuteShort}`;
+  return `${t.expiresIn} ${t.moments}`;
 }
 
 function Pill({ children }: { children: React.ReactNode }) {
@@ -59,7 +64,10 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-function buildHref(base: { q: string; region: string; sort: string; tag: string }, patch: Partial<typeof base>) {
+function buildHref(
+  base: { q: string; region: string; sort: string; tag: string },
+  patch: Partial<typeof base>
+) {
   const next = { ...base, ...patch };
   const params = new URLSearchParams();
   if (next.q) params.set("q", next.q);
@@ -72,6 +80,9 @@ function buildHref(base: { q: string; region: string; sort: string; tag: string 
 
 export default async function ListingsPage({ searchParams }: PageProps) {
   noStore();
+
+  const lang = await getLang();
+  const t = i18n[lang].listings;
 
   // ✅ suporta Next que passa searchParams como Promise
   const sp: SearchParams = (await Promise.resolve(searchParams)) ?? {};
@@ -168,24 +179,24 @@ export default async function ListingsPage({ searchParams }: PageProps) {
     regions = (regionRows ?? [])
       .map((r) => (r.region ?? "").trim())
       .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, "pt-BR"));
+      .sort((a, b) => a.localeCompare(b, lang === "pt" ? "pt-BR" : "en"));
 
     const tags = tagCounts.length
       ? await prisma.tag.findMany({
-          where: { id: { in: tagCounts.map((t) => t.tagId) } },
+          where: { id: { in: tagCounts.map((x) => x.tagId) } },
           select: { id: true, name: true },
         })
       : [];
 
-    const tagMap = new Map(tags.map((t) => [t.id, t.name]));
+    const tagMap = new Map(tags.map((x) => [x.id, x.name]));
     topTags = tagCounts
-      .map((t) => ({
-        name: tagMap.get(t.tagId) ?? "",
-        count: t._count.tagId,
+      .map((x) => ({
+        name: tagMap.get(x.tagId) ?? "",
+        count: x._count.tagId,
       }))
-      .filter((t) => t.name);
+      .filter((x) => x.name);
   } catch (e: any) {
-    dbError = e?.message ?? "Erro no banco.";
+    dbError = e?.message ?? "DB error.";
   }
 
   return (
@@ -198,57 +209,48 @@ export default async function ListingsPage({ searchParams }: PageProps) {
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
       </div>
 
-
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <Badge>⚡ print + “ofereço / quero” + Steam/Discord</Badge>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight">Feed de trocas</h1>
-            <p className="mt-2 text-sm text-white/70">
-              Filtra, encontra e fecha direto no contato. Simples e sem drama.
-            </p>
+            <Badge>{t.badge}</Badge>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t.title}</h1>
+            <p className="mt-2 text-sm text-white/70">{t.subtitle}</p>
           </div>
 
           <div className="flex gap-2">
-            <Link
-              href="/new"
-              className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
-            >
-              Criar anúncio
+            <Link href="/new" className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black hover:opacity-90">
+              {t.create}
             </Link>
             <Link
               href="/listings"
               className="rounded-2xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
             >
-              Limpar filtros
+              {t.clear}
             </Link>
           </div>
         </div>
 
         {/* Filters */}
-        <form
-          method="GET"
-          className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur"
-        >
+        <form method="GET" className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur">
           <div className="grid gap-3 md:grid-cols-4">
             <div className="md:col-span-2">
-              <label className="text-xs font-semibold text-white/70">Buscar</label>
+              <label className="text-xs font-semibold text-white/70">{t.searchLabel}</label>
               <input
                 name="q"
                 defaultValue={q}
-                placeholder="Ex: blueprint, mod, bateria, medkit…"
+                placeholder={t.searchPh}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 p-3 text-sm text-white placeholder:text-white/40"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-white/70">Região</label>
+              <label className="text-xs font-semibold text-white/70">{t.regionLabel}</label>
               <select
                 name="region"
                 defaultValue={region}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 p-3 text-sm text-white"
               >
-                <option value="">Todas</option>
+                <option value="">{t.regionAll}</option>
                 {regions.map((r) => (
                   <option key={r} value={r}>
                     {r}
@@ -258,61 +260,56 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-white/70">Ordenar</label>
+              <label className="text-xs font-semibold text-white/70">{t.sortLabel}</label>
               <select
                 name="sort"
                 defaultValue={sort}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 p-3 text-sm text-white"
               >
-                <option value="new">Mais recentes</option>
-                <option value="expiring">Expirando primeiro</option>
+                <option value="new">{t.sortNew}</option>
+                <option value="expiring">{t.sortExpiring}</option>
               </select>
             </div>
           </div>
 
-          {/* mantém tag quando clicar em "Aplicar filtros" */}
+          {/* mantém tag quando clicar em aplicar */}
           <input type="hidden" name="tag" value={tag} />
 
           <div className="mt-4 flex items-center justify-between gap-3">
             <div className="text-xs text-white/50">
-              Mostrando <span className="text-white/80">até 30</span> de{" "}
-              <span className="text-white/80">{totalMatched}</span> resultados
+              {t.showingPrefix} <span className="text-white/80">30</span> {t.showingMid}{" "}
+              <span className="text-white/80">{totalMatched}</span> {t.showingSuffix}
             </div>
 
-            <button
-              type="submit"
-              className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black hover:opacity-90"
-            >
-              Aplicar filtros
+            <button type="submit" className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black hover:opacity-90">
+              {t.apply}
             </button>
           </div>
 
-          {/* Tags populares como LINKS (100% confiável) */}
+          {/* Popular tags */}
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-white/50">Tags populares:</span>
+            <span className="text-xs text-white/50">{t.popularTags}</span>
 
             <Link
               href={buildHref(base, { tag: "" })}
               className={`rounded-full border px-3 py-1 text-xs ${
-                !tag
-                  ? "border-white/25 bg-white/10 text-white"
-                  : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                !tag ? "border-white/25 bg-white/10 text-white" : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
               }`}
             >
-              Todas
+              {t.allTags}
             </Link>
 
-            {topTags.slice(0, 10).map((t) => (
+            {topTags.slice(0, 10).map((x) => (
               <Link
-                key={t.name}
-                href={buildHref(base, { tag: t.name })}
+                key={x.name}
+                href={buildHref(base, { tag: x.name })}
                 className={`rounded-full border px-3 py-1 text-xs ${
-                  tag.toLowerCase() === t.name.toLowerCase()
+                  tag.toLowerCase() === x.name.toLowerCase()
                     ? "border-white/25 bg-white/10 text-white"
                     : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
                 }`}
               >
-                {t.name} <span className="text-white/40">({t.count})</span>
+                {x.name} <span className="text-white/40">({x.count})</span>
               </Link>
             ))}
           </div>
@@ -326,14 +323,13 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
         {!dbError && listings.length === 0 && (
           <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-8 text-white/70">
-            Nada apareceu com esses filtros. Limpa tag/região ou tenta outra busca
+            {t.emptyFilters}
           </div>
         )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((l) => {
-            const expiresText =
-              l.expiresAt ? timeLeft(new Date(l.expiresAt), now) : null;
+            const expiresText = l.expiresAt ? timeLeft(new Date(l.expiresAt), now, t) : null;
 
             return (
               <article
@@ -344,7 +340,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                   <div className="aspect-[16/10]" />
                   <Image
                     src={l.imageUrl}
-                    alt="Print do item"
+                    alt={t.imageAlt}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 33vw"
@@ -352,7 +348,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
                   <div className="absolute left-3 top-3 flex flex-wrap gap-2">
                     <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
-                      print
+                      {t.pillPrint}
                     </span>
                     {expiresText ? (
                       <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
@@ -364,26 +360,26 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div className="text-xs text-white/50">
-                    {l.createdAt ? formatDateBR(new Date(l.createdAt)) : ""}
+                    {l.createdAt ? formatDate(new Date(l.createdAt), lang) : ""}
                   </div>
-                  <div className="text-xs text-white/50">{l.region ?? "—"}</div>
+                  <div className="text-xs text-white/50">{l.region ?? t.dash}</div>
                 </div>
 
-                <div className="mt-3 text-xs text-white/50">Ofereço</div>
+                <div className="mt-3 text-xs text-white/50">{t.offer}</div>
                 <div className="mt-1 line-clamp-1 text-sm font-semibold">{l.offerText}</div>
 
-                <div className="mt-3 text-xs text-white/50">Quero</div>
+                <div className="mt-3 text-xs text-white/50">{t.want}</div>
                 <div className="mt-1 line-clamp-1 text-sm text-white/80">{l.wantText}</div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {l.tags?.slice(0, 8).map((t: any) => (
-                    <Pill key={t.tagId}>{t.tag?.name ?? "tag"}</Pill>
+                  {l.tags?.slice(0, 8).map((x: any) => (
+                    <Pill key={x.tagId}>{x.tag?.name ?? "tag"}</Pill>
                   ))}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-xs text-white/50">
                   <span className="text-white/55">
-                    {l.user?.discordHandle ? l.user.discordHandle : "contato no anúncio"}
+                    {l.user?.discordHandle ? l.user.discordHandle : t.contactFallback}
                   </span>
 
                   {l.user?.steamProfileUrl ? (
@@ -393,10 +389,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       rel="noreferrer"
                       className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
                     >
-                      Steam
+                      {t.steam}
                     </a>
                   ) : (
-                    <span className="text-white/40">sem steam</span>
+                    <span className="text-white/40">{t.noSteam}</span>
                   )}
                 </div>
               </article>
@@ -405,7 +401,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
         </div>
 
         <div className="mt-10 rounded-3xl border border-white/10 bg-white/5 p-6 text-xs text-white/60 backdrop-blur">
-          Os anúncios expiram e somem do feed automaticamente. Quer renovar? Posta de novo com print atualizado.
+          {t.autoExpireNote}
         </div>
       </div>
     </main>

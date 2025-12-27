@@ -1,20 +1,17 @@
 import type { Lang } from "@/lib/getLang";
 
 type NewDict = {
-  // Top
   badge: string;
   title: string;
   subtitle: string;
   backFeed: string;
 
-  // Trade details
   detailsTitle: string;
   offerLabel: string;
   offerPh: string;
   wantLabel: string;
   wantPh: string;
 
-  // Tags / region / expiration
   tagsLabel: string;
   tagsPh: string;
 
@@ -28,18 +25,15 @@ type NewDict = {
   exp3d: string;
   exp7d: string;
 
-  // Contact
   contactTitle: string;
   steamLabel: string;
   steamPh: string;
   discordLabel: string;
   discordPh: string;
 
-  // Rules pills
   ruleRmt: string;
   ruleClear: string;
 
-  // Image card
   imageTitle: string;
   imageSubtitle: string;
   choose: string;
@@ -47,14 +41,11 @@ type NewDict = {
   cropBtn: string;
   useOriginalBtn: string;
 
-  // Submit
   submit: string;
   submitting: string;
 
-  // Footer
   footer: string;
 
-  // Crop modal
   cropTitle: string;
   cropSubtitle: string;
   horizontal: string;
@@ -65,7 +56,6 @@ type NewDict = {
   useCrop: string;
   cancel: string;
 
-  // Errors
   errNeedOfferWant: string;
   errNeedImage: string;
   errUploadFail: string;
@@ -74,19 +64,69 @@ type NewDict = {
   errTryAgain: string;
   errCropFail: string;
 
-  // A11y
   previewAlt: string;
 };
 
+type ListingsDict = {
+  badge: string;
+  title: string;
+  subtitle: string;
+
+  create: string;
+  clear: string;
+
+  searchLabel: string;
+  searchPh: string;
+
+  regionLabel: string;
+  regionAll: string;
+
+  sortLabel: string;
+  sortNew: string;
+  sortExpiring: string;
+
+  showingPrefix: string; // "Showing up to"
+  showingMid: string; // "of"
+  showingSuffix: string; // "results"
+  apply: string;
+
+  popularTags: string;
+  allTags: string;
+
+  emptyFilters: string;
+
+  imageAlt: string;
+  pillPrint: string;
+
+  createdAtTz: string; // label for timezone formatting (optional)
+  dash: string;
+
+  offer: string;
+  want: string;
+
+  contactFallback: string;
+  noSteam: string;
+  steam: string;
+
+  expiresExpired: string;
+  expiresIn: string;
+  day: string;
+  days: string;
+  hourShort: string;
+  minuteShort: string;
+  moments: string;
+
+  autoExpireNote: string;
+};
+
 type Dict = {
-  // Hero
+  // Home
   badge: string;
   title: string;
   subtitle: string;
   postNow: string;
   openFeed: string;
 
-  // Stats
   total: string;
   totalHint: string;
   new24h: string;
@@ -94,18 +134,15 @@ type Dict = {
   activeNow: string;
   activeNowHint: string;
 
-  // Rules
   rulesTitle: string;
   rules1: string;
   rules2: string;
   rules3: string;
 
-  // Trending
   trendingTitle: string;
   noTags1: string;
   noTags2: string;
 
-  // Preview
   previewTitle: string;
   previewSubtitle: string;
   previewNewPrefix: string;
@@ -113,14 +150,12 @@ type Dict = {
   emptyPreview: string;
   viewAll: string;
 
-  // Cards
   cardOffer: string;
   cardWant: string;
   discordAvailable: string;
   noContact: string;
   imageAlt: string;
 
-  // How it works
   howTitle: string;
   howSubtitle: string;
   howCta: string;
@@ -131,15 +166,16 @@ type Dict = {
   step3Title: string;
   step3Desc: string;
 
-  // Footer
   footer: string;
 
-  // New listing page
+  // New + Listings
   new: NewDict;
+  listings: ListingsDict;
 };
 
 export const i18n = {
   pt: {
+    // Home
     badge: "3 passos para trocar",
     title: "Posta seu item. A galera vê. Você troca.",
     subtitle:
@@ -188,6 +224,7 @@ export const i18n = {
 
     footer: "Fan-made, sem afiliação oficial.",
 
+    // New
     new: {
       badge: "print + oferta + troca + contato",
       title: "Criar anúncio",
@@ -217,7 +254,7 @@ export const i18n = {
       steamLabel: "Steam (link do perfil)",
       steamPh: "https://steamcommunity.com/id/...",
       discordLabel: "Discord (opcional)",
-      discordPh: "ex: User#0000",
+      discordPh: "ex: yas#0001",
 
       ruleRmt: "Sem dinheiro real (RMT)",
       ruleClear: "Print claro = mais chance de fechar",
@@ -255,9 +292,64 @@ export const i18n = {
 
       previewAlt: "Preview",
     },
+
+    // Listings
+    listings: {
+      badge: "⚡ print + “ofereço / quero” + Steam/Discord",
+      title: "Feed de trocas",
+      subtitle: "Filtra, encontra e fecha direto no contato. Simples e sem drama.",
+
+      create: "Criar anúncio",
+      clear: "Limpar filtros",
+
+      searchLabel: "Buscar",
+      searchPh: "Ex: blueprint, mod, bateria, medkit…",
+
+      regionLabel: "Região",
+      regionAll: "Todas",
+
+      sortLabel: "Ordenar",
+      sortNew: "Mais recentes",
+      sortExpiring: "Expirando primeiro",
+
+      showingPrefix: "Mostrando até",
+      showingMid: "de",
+      showingSuffix: "resultados",
+      apply: "Aplicar filtros",
+
+      popularTags: "Tags populares:",
+      allTags: "Todas",
+
+      emptyFilters: "Nada apareceu com esses filtros. Limpa tag/região ou tenta outra busca.",
+
+      imageAlt: "Print do item",
+      pillPrint: "print",
+
+      createdAtTz: "",
+      dash: "—",
+
+      offer: "Ofereço",
+      want: "Quero",
+
+      contactFallback: "contato no anúncio",
+      noSteam: "sem steam",
+      steam: "Steam",
+
+      expiresExpired: "expirado",
+      expiresIn: "expira em",
+      day: "dia",
+      days: "dias",
+      hourShort: "h",
+      minuteShort: "min",
+      moments: "instantes",
+
+      autoExpireNote:
+        "Os anúncios expiram e somem do feed automaticamente. Quer renovar? Posta de novo com print atualizado.",
+    },
   },
 
   en: {
+    // Home
     badge: "3 steps to trade",
     title: "Post your item. People see it. You trade.",
     subtitle:
@@ -306,6 +398,7 @@ export const i18n = {
 
     footer: "Fan-made. Not officially affiliated.",
 
+    // New
     new: {
       badge: "screenshot + offer + want + contact",
       title: "Create listing",
@@ -314,15 +407,15 @@ export const i18n = {
 
       detailsTitle: "Trade details",
       offerLabel: "Offering",
-      offerPh: "Ex: Battery pack, rare mod, blueprint…",
+      offerPh: "e.g. Battery pack, rare mod, blueprint…",
       wantLabel: "Looking for",
-      wantPh: "Ex: medkit, specific mod, 1:1…",
+      wantPh: "e.g. medkit, specific mod, 1:1…",
 
       tagsLabel: "Tags (comma-separated)",
-      tagsPh: "Ex: blueprint, mod, rare, BR, EU…",
+      tagsPh: "e.g. blueprint, mod, rare, BR, EU…",
 
       regionLabel: "Region (optional)",
-      regionPh: "Ex: BR / SA / NA / EU…",
+      regionPh: "e.g. BR / SA / NA / EU…",
 
       expiresLabel: "Expiration",
       expiresHint: "When it expires, the listing automatically disappears from the feed.",
@@ -335,7 +428,7 @@ export const i18n = {
       steamLabel: "Steam (profile link)",
       steamPh: "https://steamcommunity.com/id/...",
       discordLabel: "Discord (optional)",
-      discordPh: "ex: User#0000",
+      discordPh: "e.g. yas#0001",
 
       ruleRmt: "No real-money trading (RMT)",
       ruleClear: "Clear screenshots get more replies",
@@ -372,6 +465,60 @@ export const i18n = {
       errCropFail: "Failed to crop the image.",
 
       previewAlt: "Preview",
+    },
+
+    // Listings
+    listings: {
+      badge: "⚡ screenshot + “offering / looking for” + Steam/Discord",
+      title: "Trade feed",
+      subtitle: "Filter, find, and deal directly through the contact. Clean and simple.",
+
+      create: "Create listing",
+      clear: "Clear filters",
+
+      searchLabel: "Search",
+      searchPh: "e.g. blueprint, mod, battery, medkit…",
+
+      regionLabel: "Region",
+      regionAll: "All",
+
+      sortLabel: "Sort",
+      sortNew: "Newest",
+      sortExpiring: "Expiring first",
+
+      showingPrefix: "Showing up to",
+      showingMid: "of",
+      showingSuffix: "results",
+      apply: "Apply filters",
+
+      popularTags: "Popular tags:",
+      allTags: "All",
+
+      emptyFilters: "Nothing matched those filters. Clear tag/region or try a different search.",
+
+      imageAlt: "Item screenshot",
+      pillPrint: "screenshot",
+
+      createdAtTz: "",
+      dash: "—",
+
+      offer: "Offering",
+      want: "Looking for",
+
+      contactFallback: "contact in listing",
+      noSteam: "no steam",
+      steam: "Steam",
+
+      expiresExpired: "expired",
+      expiresIn: "expires in",
+      day: "day",
+      days: "days",
+      hourShort: "h",
+      minuteShort: "min",
+      moments: "moments",
+
+      autoExpireNote:
+        "Listings expire and automatically disappear from the feed. Want to renew? Post again with an updated screenshot.",
     },
   },
 } satisfies Record<Lang, Dict>;
