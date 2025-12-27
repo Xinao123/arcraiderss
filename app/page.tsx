@@ -1,8 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { getLang } from "@/lib/getLang";
+import { i18n } from "@/lib/i18n";
+
 
 export const revalidate = 30;
+const lang = getLang();
+const t = i18n[lang];
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
