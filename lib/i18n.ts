@@ -405,7 +405,7 @@ export const i18n = {
       emptyFilters: "Não encontramos resultados. Tente mudar a região, as palavras ou a busca.",
 
       imageAlt: "Imagem do item",
-     
+      
 
       createdAtTz: "",
       dash: "—",
@@ -599,7 +599,7 @@ export const i18n = {
       tagsPh: "Example: upgrade, rare, battery, med kit, Brazil…",
 
       regionLabel: "Region (optional)",
-      regionPh: "Example: SA  / NA / EU / OCE...",
+      regionPh: "Example: SA  / NA / EU / OCE",
 
       expiresLabel: "Post duration",
       expiresHint: "After this time, the post is removed from the list automatically.",
@@ -681,7 +681,7 @@ export const i18n = {
       emptyFilters: "No results found. Try changing the region, keywords, or search.",
 
       imageAlt: "Item image",
-      pillPrint: "",
+     
 
       createdAtTz: "",
       dash: "—",
