@@ -212,7 +212,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-14 sm:py-16">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <Badge>print + “ofereço / quero” + Steam/Discord · pronto</Badge>
+            <Badge>3 passos para trocar</Badge>
 
             <h1 className="mt-5 text-4xl font-semibold tracking-tight sm:text-5xl">
               Posta seu item. A galera vê. Você troca.
@@ -220,7 +220,7 @@ export default async function HomePage() {
 
             <p className="mt-4 text-base leading-relaxed text-white/70">
               ARC Traders é um feed de trocas direto ao ponto: print do item, o que você quer em troca e um contato.
-              Sem conta, sem cadastro chato. Só anúncio que funciona.
+              Sem conta, sem cadastro chato.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -257,7 +257,7 @@ export default async function HomePage() {
 
             {/* Trending tags */}
             <div className="mt-6">
-              <div className="text-xs text-white/50">O que tá bombando no feed</div>
+              <div className="text-xs text-white/50">Oque esta mais vendendo</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {topTags.length ? (
                   topTags.map((t) => (
@@ -279,7 +279,7 @@ export default async function HomePage() {
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold">Feed ao vivo</div>
+                <div className="text-sm font-semibold">Anuncios</div>
                 <div className="text-xs text-white/60">últimas trocas publicadas pela comunidade</div>
               </div>
               <div className="text-xs text-white/50">24h: {listingsLast24h} novos</div>
@@ -302,7 +302,7 @@ export default async function HomePage() {
                 href="/listings"
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
               >
-                Ver tudo no feed
+                Ver todos os anuncios
               </Link>
             </div>
           </div>
@@ -345,7 +345,7 @@ export default async function HomePage() {
             <div className="text-lg">🤝</div>
             <div className="mt-3 text-base font-semibold">Deixa contato</div>
             <div className="mt-2 text-sm text-white/70">
-              Steam ou Discord e pronto. A negociação acontece direto com você.
+              Steam/Discord ou tag no jogo. A negociação acontece direto com você.
             </div>
           </div>
         </div>
