@@ -373,9 +373,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/5" />
 
                     <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
-                        {t.pillPrint}
-                      </span>
                       {expiresText ? (
                         <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
                           {expiresText}
