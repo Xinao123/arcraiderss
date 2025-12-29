@@ -72,6 +72,9 @@ type ListingsDict = {
   title: string;
   subtitle: string;
 
+  readMore: string;
+  readLess: string;
+
   create: string;
   clear: string;
 
@@ -420,6 +423,9 @@ export const i18n = {
       title: "Anúncios de troca",
       subtitle: "Pesquise e fale diretamente com quem publicou.",
 
+      readMore: "ver mais",
+      readLess: "ver menos",
+
       create: "Novo anúncio",
       clear: "Limpar busca",
 
@@ -738,6 +744,9 @@ export const i18n = {
       title: "Trade posts",
       subtitle: "Search and talk directly to the person who posted.",
 
+      readMore: "show more",
+      readLess: "show less",
+      
       create: "New post",
       clear: "Clear search",
 

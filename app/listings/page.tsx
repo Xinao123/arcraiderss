@@ -78,6 +78,59 @@ function buildHref(
   return qs ? `/listings?${qs}` : "/listings";
 }
 
+function isLongText(text: string, limit = 90) {
+  return (text ?? "").trim().length > limit;
+}
+
+function ExpandableText({
+  text,
+  moreLabel,
+  lessLabel,
+  clampClass = "line-clamp-2",
+  className = "",
+}: {
+  text: string;
+  moreLabel: string;
+  lessLabel: string;
+  clampClass?: string;
+  className?: string;
+}) {
+  const content = (text ?? "").trim();
+  if (!content) return null;
+
+  // se não for longo, mostra normal
+  if (!isLongText(content)) {
+    return (
+      <div className={`break-words ${className}`}>
+        {content}
+      </div>
+    );
+  }
+
+  // longo: usa details/summary (server-friendly)
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none select-none">
+        <div className={`break-words ${className}`}>
+          <span className={`block group-open:hidden ${clampClass}`}>
+            {content}
+          </span>
+          <span className="hidden group-open:block whitespace-pre-wrap">
+            {content}
+          </span>
+        </div>
+
+        <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-white/55 group-open:hidden">
+          {moreLabel} <span aria-hidden>▾</span>
+        </span>
+        <span className="mt-1 hidden items-center gap-1 text-[11px] text-white/55 group-open:inline-flex">
+          {lessLabel} <span aria-hidden>▴</span>
+        </span>
+      </summary>
+    </details>
+  );
+}
+
 export default async function ListingsPage({ searchParams }: PageProps) {
   noStore();
 
@@ -101,7 +154,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
   let totalMatched = 0;
 
   try {
-    
     await prisma.listing.deleteMany({
       where: { expiresAt: { lte: now } },
     });
@@ -199,7 +251,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#07080c] text-white">
-
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(70%_45%_at_50%_0%,rgba(255,255,255,0.12),rgba(7,8,12,0))]" />
         <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.10)_1px,transparent_1px)] [background-size:72px_72px]" />
@@ -230,7 +281,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             </Link>
           </div>
         </div>
-
 
         <form
           method="GET"
@@ -292,7 +342,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
             </button>
           </div>
 
-
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="text-xs text-white/50">{t.popularTags}</span>
 
@@ -346,7 +395,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
               >
                 <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5">
                   <div className="relative h-[260px] w-full">
-            
                     <Image
                       src={l.imageUrl}
                       alt=""
@@ -357,7 +405,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       quality={95}
                     />
 
-                
                     <Image
                       src={l.imageUrl}
                       alt={t.imageAlt}
@@ -367,7 +414,6 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       quality={95}
                     />
 
-                   
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/5" />
 
                     <div className="absolute left-3 top-3 flex flex-wrap gap-2">
@@ -388,10 +434,22 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                 </div>
 
                 <div className="mt-3 text-xs text-white/50">{t.offer}</div>
-                <div className="mt-1 line-clamp-1 text-sm font-semibold">{l.offerText}</div>
+                <ExpandableText
+                  text={l.offerText ?? ""}
+                  moreLabel={t.readMore}
+                  lessLabel={t.readLess}
+                  clampClass="line-clamp-2"
+                  className="mt-1 text-sm font-semibold text-white"
+                />
 
                 <div className="mt-3 text-xs text-white/50">{t.want}</div>
-                <div className="mt-1 line-clamp-1 text-sm text-white/80">{l.wantText}</div>
+                <ExpandableText
+                  text={l.wantText ?? ""}
+                  moreLabel={t.readMore}
+                  lessLabel={t.readLess}
+                  clampClass="line-clamp-2"
+                  className="mt-1 text-sm text-white/80"
+                />
 
                 <div className="mt-3 flex flex-wrap gap-2">
                   {l.tags?.slice(0, 8).map((x: any) => (
@@ -399,8 +457,8 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                   ))}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-xs text-white/50">
-                  <span className="text-white/55">
+                <div className="mt-4 flex items-center justify-between gap-3 text-xs text-white/50">
+                  <span className="min-w-0 flex-1 truncate text-white/55" title={l.user?.discordHandle ?? ""}>
                     {l.user?.discordHandle ? l.user.discordHandle : t.contactFallback}
                   </span>
 
@@ -409,12 +467,12 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                       href={l.user.steamProfileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
+                      className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
                     >
                       {t.steam}
                     </a>
                   ) : (
-                    <span className="text-white/40">{t.noSteam}</span>
+                    <span className="shrink-0 text-white/40">{t.noSteam}</span>
                   )}
                 </div>
               </article>

@@ -454,7 +454,7 @@ export default function NewListingPage() {
                     onChange={(e) => setExpiresIn(e.target.value as "5m" | "1d" | "3d" | "7d")}
                     className="mt-2 w-full rounded-2xl border border-white/10 bg-black/20 p-3 text-sm text-white"
                   >
-                    <option value="5m">{t.exp5m}</option>
+                    
                     <option value="1d">{t.exp1d}</option>
                     <option value="3d">{t.exp3d}</option>
                     <option value="7d">{t.exp7d}</option>
