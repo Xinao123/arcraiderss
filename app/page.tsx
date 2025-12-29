@@ -164,34 +164,36 @@ function ListingCard({
             {/* espaço pra você colocar depois “há X min” se quiser */}
           </div>
 
-          <div className="flex items-center gap-2">
-            {steam ? (
-              <a
-                href={steam}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
-                title="Steam"
-              >
-                <span className="text-[13px]">🎮</span>
-                Steam
-              </a>
-            ) : null}
 
-            {discord ? (
-              <span
-                className="inline-flex max-w-[170px] items-center gap-2 truncate rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-white/75"
-                title={discord}
-              >
-                <span className="text-[13px]">💬</span>
-                <span className="truncate">{discord}</span>
-              </span>
-            ) : null}
+<div className="mt-4 flex flex-wrap items-center gap-2">
+  {steam ? (
+    <a
+      href={steam}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+      title="Steam"
+    >
+      <span className="text-[13px]">🎮</span>
+      Steam
+    </a>
+  ) : null}
 
-            {!steam && !discord ? (
-              <span className="text-white/35">{t.noContact}</span>
-            ) : null}
-          </div>
+  {discord ? (
+    <span
+      className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-white/75"
+      title={discord}
+    >
+      <span className="shrink-0 text-[13px]">💬</span>
+      <span className="min-w-0 truncate">{discord}</span>
+    </span>
+  ) : null}
+
+  {!steam && !discord ? (
+    <span className="text-white/35">{t.noContact}</span>
+  ) : null}
+</div>
+
         </div>
       </div>
     </article>
