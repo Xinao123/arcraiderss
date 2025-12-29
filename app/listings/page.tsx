@@ -98,26 +98,16 @@ function ExpandableText({
   const content = (text ?? "").trim();
   if (!content) return null;
 
-  // se não for longo, mostra normal
   if (!isLongText(content)) {
-    return (
-      <div className={`break-words ${className}`}>
-        {content}
-      </div>
-    );
+    return <div className={`break-words ${className}`}>{content}</div>;
   }
 
-  // longo: usa details/summary (server-friendly)
   return (
     <details className="group">
       <summary className="cursor-pointer list-none select-none">
         <div className={`break-words ${className}`}>
-          <span className={`block group-open:hidden ${clampClass}`}>
-            {content}
-          </span>
-          <span className="hidden group-open:block whitespace-pre-wrap">
-            {content}
-          </span>
+          <span className={`block group-open:hidden ${clampClass}`}>{content}</span>
+          <span className="hidden group-open:block whitespace-pre-wrap">{content}</span>
         </div>
 
         <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-white/55 group-open:hidden">
@@ -415,22 +405,24 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                     />
 
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/5" />
-
-                    <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                      {expiresText ? (
-                        <span className="rounded-full border border-white/10 bg-black/45 px-2 py-1 text-[11px] text-white/80 backdrop-blur">
-                          {expiresText}
-                        </span>
-                      ) : null}
-                    </div>
                   </div>
                 </div>
 
+                {/* ✅ VERSÃO 2: prazo fora da imagem (nunca sobrepõe o item) */}
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div className="text-xs text-white/50">
                     {l.createdAt ? formatDate(new Date(l.createdAt), lang) : ""}
                   </div>
-                  <div className="text-xs text-white/50">{l.region ?? t.dash}</div>
+
+                  <div className="flex items-center gap-2">
+                    {expiresText ? (
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/70">
+                        {expiresText}
+                      </span>
+                    ) : null}
+
+                    <div className="text-xs text-white/50">{l.region ?? t.dash}</div>
+                  </div>
                 </div>
 
                 <div className="mt-3 text-xs text-white/50">{t.offer}</div>
@@ -458,7 +450,10 @@ export default async function ListingsPage({ searchParams }: PageProps) {
                 </div>
 
                 <div className="mt-4 flex items-center justify-between gap-3 text-xs text-white/50">
-                  <span className="min-w-0 flex-1 truncate text-white/55" title={l.user?.discordHandle ?? ""}>
+                  <span
+                    className="min-w-0 flex-1 truncate text-white/55"
+                    title={l.user?.discordHandle ?? ""}
+                  >
                     {l.user?.discordHandle ? l.user.discordHandle : t.contactFallback}
                   </span>
 
